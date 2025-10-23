@@ -1,8 +1,13 @@
-import { Box, Paper, Typography, Button, Stack, Fade, CircularProgress, IconButton, Chip, Divider, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Box, Paper, Typography, Button, Stack, Fade, CircularProgress, IconButton, Chip, ToggleButtonGroup, ToggleButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import LoginIcon from "@mui/icons-material/Login";
+import LogoutIcon from "@mui/icons-material/Logout";
+import KeyIcon from "@mui/icons-material/Key";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import { SettingsDialog } from "./SettingsDialog";
+import { invoke } from "@tauri-apps/api/core";
 
 interface PopupProps {
   translation: string;
@@ -15,6 +20,7 @@ interface PopupProps {
   onClose: () => void;
   onLanguageSwitch: () => void;
   onModeChange: (mode: "translate" | "enhance") => void;
+  onClearAndStream: () => void;
 }
 
 export function TranslationPopup({
@@ -28,9 +34,14 @@ export function TranslationPopup({
   onClose,
   onLanguageSwitch,
   onModeChange,
+  onClearAndStream,
 }: PopupProps) {
   const contentEndRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [customInstruction, setCustomInstruction] = useState("");
+  const [showEnhanceInput, setShowEnhanceInput] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -53,6 +64,12 @@ export function TranslationPopup({
       contentEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [translation, isStreaming]);
+
+  useEffect(() => {
+    if (mode === "translate") {
+      setShowEnhanceInput(false);
+    }
+  }, [mode]);
 
   if (!isOpen) {
     return null;
@@ -83,49 +100,40 @@ export function TranslationPopup({
             boxShadow: "none",
             border: "none",
             position: "relative",
+            userSelect: "none",
           }}
         >
           <Box
+            data-tauri-drag-region
             sx={{
               borderBottom: "1px solid #333333",
               background: "#242424",
               flexShrink: 0,
+              cursor: "move",
             }}
           >
             <Box
+              data-tauri-drag-region
               sx={{
                 display: "flex",
                 alignItems: "center",
                 padding: "8px 12px",
-                gap: 1,
-                minHeight: "40px",
+                gap: 2,
+                minHeight: "44px",
                 minWidth: 0,
                 overflow: "hidden",
+                cursor: "move",
               }}
             >
-              <IconButton
-                size="small"
-                onClick={() => setSettingsOpen(true)}
-                sx={{
-                  color: "#999999",
-                  padding: "4px",
-                  flexShrink: 0,
-                  "&:hover": { backgroundColor: "#333333" },
-                }}
-              >
-                <SettingsIcon sx={{ fontSize: 16 }} />
-              </IconButton>
+              <Box data-tauri-drag-region sx={{ width: 80, flexShrink: 0, cursor: "move" }} />
 
               <Box
-                data-tauri-drag-region
                 sx={{
-                  flex: 1,
-                  cursor: "move",
                   display: "flex",
                   alignItems: "center",
+                  gap: 2,
+                  flex: 1,
                   justifyContent: "center",
-                  minWidth: 0,
-                  overflow: "hidden",
                 }}
               >
                 <ToggleButtonGroup
@@ -170,73 +178,128 @@ export function TranslationPopup({
                     Fix
                   </ToggleButton>
                 </ToggleButtonGroup>
-              </Box>
 
-              <Box sx={{ width: 20, flexShrink: 0 }} />
-            </Box>
-
-            {mode === "translate" && (
-              <>
-                <Divider sx={{ borderColor: "#333333" }} />
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    padding: "8px 12px",
                     gap: 1,
-                    minHeight: "44px",
-                    minWidth: 0,
-                    overflow: "hidden",
                   }}
                 >
                   <Chip
-                    label={detectedLanguage === "de" ? "German" : "English"}
+                    label={detectedLanguage === "de" ? "DE" : "EN"}
                     size="small"
                     sx={{
-                      backgroundColor: "#333333",
-                      color: "#e0e0e0",
+                      backgroundColor: mode === "translate" ? "#333333" : "#2a2a2a",
+                      color: mode === "translate" ? "#e0e0e0" : "#666666",
                       fontWeight: 500,
-                      fontSize: "0.75rem",
+                      fontSize: "0.7rem",
                       height: "26px",
+                      minWidth: "36px",
+                      opacity: mode === "translate" ? 1 : 0.5,
                     }}
                   />
                   <IconButton
                     size="small"
                     onClick={onLanguageSwitch}
-                    disabled={isStreaming}
+                    disabled={isStreaming || mode === "enhance"}
                     sx={{
-                      color: "#64b5f6",
-                      padding: "4px",
-                      "&:hover": { backgroundColor: "#333333" },
-                      "&.Mui-disabled": { color: "#555555" },
+                      color: mode === "translate" ? "#64b5f6" : "#555555",
+                      padding: "2px",
+                      "&:hover": { backgroundColor: mode === "translate" ? "#333333" : "transparent" },
+                      "&.Mui-disabled": { color: "#555555", cursor: "not-allowed" },
+                      opacity: mode === "translate" ? 1 : 0.5,
                     }}
                   >
-                    <SwapHorizIcon sx={{ fontSize: 18 }} />
+                    <SwapHorizIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                   <Chip
-                    label={detectedLanguage === "de" ? "English" : "German"}
+                    label={detectedLanguage === "de" ? "EN" : "DE"}
                     size="small"
                     sx={{
-                      backgroundColor: "#333333",
-                      color: "#e0e0e0",
+                      backgroundColor: mode === "translate" ? "#333333" : "#2a2a2a",
+                      color: mode === "translate" ? "#e0e0e0" : "#666666",
                       fontWeight: 500,
-                      fontSize: "0.75rem",
+                      fontSize: "0.7rem",
                       height: "26px",
+                      minWidth: "36px",
+                      opacity: mode === "translate" ? 1 : 0.5,
                     }}
                   />
                 </Box>
-              </>
-            )}
+              </Box>
+
+              <IconButton
+                size="small"
+                onClick={(e) => setMenuAnchorEl(e.currentTarget)}
+                sx={{
+                  color: "#999999",
+                  padding: "4px",
+                  flexShrink: 0,
+                  "&:hover": { backgroundColor: "#333333" },
+                }}
+              >
+                <SettingsIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+
+              <Menu
+                anchorEl={menuAnchorEl}
+                open={Boolean(menuAnchorEl)}
+                onClose={() => setMenuAnchorEl(null)}
+                PaperProps={{
+                  sx: {
+                    background: "#2a2a2a",
+                    color: "#e0e0e0",
+                    mt: 1,
+                  }
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    setMenuAnchorEl(null);
+                    if (isLoggedIn) {
+                      setIsLoggedIn(false);
+                    } else {
+                      window.open("https://langra.app/auth", "_blank");
+                    }
+                  }}
+                  sx={{
+                    "&:hover": { backgroundColor: "#333333" },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "#64b5f6" }}>
+                    {isLoggedIn ? <LogoutIcon fontSize="small" /> : <LoginIcon fontSize="small" />}
+                  </ListItemIcon>
+                  <ListItemText>{isLoggedIn ? "Logout" : "Login"}</ListItemText>
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {
+                    setMenuAnchorEl(null);
+                    setSettingsOpen(true);
+                  }}
+                  sx={{
+                    "&:hover": { backgroundColor: "#333333" },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "#64b5f6" }}>
+                    <KeyIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>API Key Settings</ListItemText>
+                </MenuItem>
+              </Menu>
+            </Box>
 
           </Box>
           <Box
+            data-tauri-drag-region
             sx={{
               flex: 1,
               overflow: "auto",
               padding: 3,
               minHeight: 0,
               position: "relative",
+              cursor: "move",
               "&::-webkit-scrollbar": {
                 width: "6px",
               },
@@ -254,12 +317,14 @@ export function TranslationPopup({
           >
             {!translation && isStreaming ? (
               <Box
+                data-tauri-drag-region
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   minHeight: 120,
                   color: "#b3b3b3",
+                  cursor: "move",
                 }}
               >
                 <CircularProgress size={24} sx={{ marginRight: 2, color: "#64b5f6" }} />
@@ -268,6 +333,7 @@ export function TranslationPopup({
             ) : (
               <>
                 <Typography
+                  data-tauri-drag-region
                   variant="body1"
                   sx={{
                     fontSize: "1rem",
@@ -275,6 +341,7 @@ export function TranslationPopup({
                     color: "#e0e0e0",
                     wordWrap: "break-word",
                     whiteSpace: "pre-wrap",
+                    cursor: "move",
                   }}
                 >
                   {translation}
@@ -296,86 +363,150 @@ export function TranslationPopup({
                     />
                   )}
                 </Typography>
+
                 <div ref={contentEndRef} />
               </>
             )}
           </Box>
 
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              padding: "12px 16px",
-              backgroundColor: "#1f1f1f",
-              borderTop: "1px solid #333333",
-              flexShrink: 0,
-            }}
-          >
-            <Button
-              variant="text"
-              onClick={onClose}
-              size="small"
+          <Box sx={{ flexShrink: 0 }}>
+            {showEnhanceInput && mode === "enhance" && !isStreaming && translation && (
+              <Box sx={{ padding: "12px 16px", backgroundColor: "#1f1f1f", borderTop: "1px solid #333333" }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="How would you like to enhance? (press Enter)"
+                  value={customInstruction}
+                  onChange={(e) => setCustomInstruction(e.target.value)}
+                  onKeyDown={async (e) => {
+                    if (e.key === "Enter" && customInstruction.trim()) {
+                      e.preventDefault();
+                      try {
+                        onClearAndStream();
+                        await invoke("enhance_text_with_instruction", {
+                          text: translation,
+                          language: detectedLanguage,
+                          instruction: customInstruction.trim(),
+                        });
+                        setCustomInstruction("");
+                      } catch (error) {
+                        console.error("Enhancement failed:", error);
+                      }
+                    }
+                  }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "0.875rem",
+                      color: "#e0e0e0",
+                      backgroundColor: "#1a1a1a",
+                      "& fieldset": { borderColor: "#4a4a4a" },
+                      "&:hover fieldset": { borderColor: "#64b5f6" },
+                      "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                    },
+                  }}
+                  sx={{
+                    "& .MuiInputBase-input::placeholder": {
+                      color: "#808080",
+                      opacity: 1,
+                    },
+                  }}
+                />
+              </Box>
+            )}
+
+            <Stack
+              direction="row"
+              spacing={1}
               sx={{
-                minWidth: 64,
-                height: 36,
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                textTransform: "none",
-                color: "#b3b3b3",
-                "&:hover": {
-                  backgroundColor: "#333333",
-                },
+                padding: "12px 16px",
+                backgroundColor: "#1f1f1f",
+                borderTop: showEnhanceInput && mode === "enhance" && !isStreaming && translation ? "none" : "1px solid #333333",
+                flexShrink: 0,
               }}
             >
-              Close
-            </Button>
+              <Button
+                variant="text"
+                onClick={onClose}
+                size="small"
+                sx={{
+                  minWidth: 64,
+                  height: 36,
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  textTransform: "none",
+                  color: "#b3b3b3",
+                  "&:hover": {
+                    backgroundColor: "#333333",
+                  },
+                }}
+              >
+                Close
+              </Button>
 
-            <Box sx={{ flex: 1 }} />
+              <Box data-tauri-drag-region sx={{ flex: 1, cursor: "move" }} />
 
-            <Button
-              variant="text"
-              onClick={onCopy}
-              size="small"
-              disabled={isStreaming || !translation}
-              sx={{
-                minWidth: 64,
-                height: 36,
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                textTransform: "none",
-                color: "#64b5f6",
-                "&:hover": {
-                  backgroundColor: "#333333",
-                },
-              }}
-            >
-              Copy
-            </Button>
+              {mode === "enhance" && !isStreaming && translation && (
+                <IconButton
+                  size="small"
+                  onClick={() => setShowEnhanceInput(!showEnhanceInput)}
+                  sx={{
+                    color: showEnhanceInput ? "#64b5f6" : "#b3b3b3",
+                    padding: "6px",
+                    "&:hover": {
+                      backgroundColor: "#333333",
+                    },
+                  }}
+                >
+                  <AutoFixHighIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
 
-            <Button
-              variant="contained"
-              onClick={onReplace}
-              size="small"
-              disabled={isStreaming || !translation}
-              disableElevation
-              sx={{
-                minWidth: 64,
-                height: 36,
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                textTransform: "none",
-                backgroundColor: "#64b5f6",
-                color: "#000000",
-                "&:hover": {
-                  backgroundColor: "#42a5f5",
-                },
-              }}
-            >
-              Replace
-            </Button>
-          </Stack>
+              <Button
+                variant="text"
+                onClick={onCopy}
+                size="small"
+                disabled={isStreaming || !translation}
+                sx={{
+                  minWidth: 64,
+                  height: 36,
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  textTransform: "none",
+                  color: "#64b5f6",
+                  "&:hover": {
+                    backgroundColor: "#333333",
+                  },
+                }}
+              >
+                Copy
+              </Button>
+
+              <Button
+                variant="contained"
+                onClick={onReplace}
+                size="small"
+                disabled={isStreaming || !translation}
+                disableElevation
+                sx={{
+                  minWidth: 64,
+                  height: 36,
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  textTransform: "none",
+                  backgroundColor: "#64b5f6",
+                  color: "#000000",
+                  "&:hover": {
+                    backgroundColor: "#42a5f5",
+                  },
+                }}
+              >
+                Replace
+              </Button>
+            </Stack>
+          </Box>
 
           <Box
+            data-tauri-drag-region
             sx={{
               padding: "6px 16px",
               textAlign: "center",
@@ -383,14 +514,17 @@ export function TranslationPopup({
               borderTop: "1px solid #2a2a2a",
               position: "relative",
               flexShrink: 0,
+              cursor: "move",
             }}
           >
             <Typography
+              data-tauri-drag-region
               variant="caption"
               sx={{
                 fontSize: "0.65rem",
                 color: "#808080",
                 fontWeight: 400,
+                cursor: "move",
               }}
             >
               Press ESC to close

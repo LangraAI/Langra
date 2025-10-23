@@ -37,6 +37,28 @@ fn copy_to_clipboard(text: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn enhance_text_with_instruction(
+    text: String,
+    language: String,
+    instruction: String,
+    app: AppHandle,
+) {
+    use tauri::Emitter;
+
+    println!("[ENHANCE_CUSTOM] Starting custom enhancement with instruction: {}", instruction);
+    match translator::enhance_stream_with_instruction(&text, &language, &instruction, &app).await {
+        Ok(enhanced) => {
+            println!("[ENHANCE_CUSTOM] ✅ Enhancement complete: '{}'", enhanced);
+            let _ = app.emit("translation-complete", ());
+        }
+        Err(e) => {
+            println!("[ENHANCE_CUSTOM] ❌ Enhancement error: {:?}", e);
+            let _ = app.emit("translation-error", e.to_string());
+        }
+    }
+}
+
 pub async fn trigger_translation(app: &AppHandle) {
     use tauri::Emitter;
 
@@ -130,8 +152,37 @@ pub async fn trigger_translation(app: &AppHandle) {
                     let _ = app.emit("translation-complete", ());
                 }
                 Err(e) => {
+                    let error_msg = e.to_string();
                     println!("[TRIGGER] ❌ Translation error: {:?}", e);
-                    let _ = app.emit("translation-error", e.to_string());
+
+                    if error_msg.contains("relative URL without a base")
+                        || error_msg.contains("Invalid Azure credentials")
+                        || error_msg.contains("Invalid OpenAI credentials")
+                        || error_msg.contains("401")
+                        || error_msg.contains("403") {
+
+                        println!("[TRIGGER] ⚠️ Invalid credentials detected, clearing settings...");
+
+                        let current_settings = settings::load_settings();
+
+                        let cleared_settings = settings::Settings {
+                            provider: current_settings.provider,
+                            openai_api_key: String::new(),
+                            azure_endpoint: String::new(),
+                            azure_api_key: String::new(),
+                            azure_deployment: current_settings.azure_deployment,
+                            style: current_settings.style,
+                        };
+
+                        if let Err(save_err) = settings::save_settings_to_disk(&cleared_settings) {
+                            eprintln!("[TRIGGER] Failed to clear credentials: {}", save_err);
+                        } else {
+                            println!("[TRIGGER] ✅ Credentials cleared, showing welcome screen");
+                            let _ = app.emit("credentials-missing", ());
+                        }
+                    }
+
+                    let _ = app.emit("translation-error", error_msg);
                 }
             }
         }
@@ -160,8 +211,37 @@ async fn retranslate(text: String, source_lang: String) {
             let _ = app.emit("translation-complete", ());
         }
         Err(e) => {
+            let error_msg = e.to_string();
             println!("[RETRANSLATE] ❌ Translation error: {:?}", e);
-            let _ = app.emit("translation-error", e.to_string());
+
+            if error_msg.contains("relative URL without a base")
+                || error_msg.contains("Invalid Azure credentials")
+                || error_msg.contains("Invalid OpenAI credentials")
+                || error_msg.contains("401")
+                || error_msg.contains("403") {
+
+                println!("[RETRANSLATE] ⚠️ Invalid credentials detected, clearing settings...");
+
+                let current_settings = settings::load_settings();
+
+                let cleared_settings = settings::Settings {
+                    provider: current_settings.provider,
+                    openai_api_key: String::new(),
+                    azure_endpoint: String::new(),
+                    azure_api_key: String::new(),
+                    azure_deployment: current_settings.azure_deployment,
+                    style: current_settings.style,
+                };
+
+                if let Err(save_err) = settings::save_settings_to_disk(&cleared_settings) {
+                    eprintln!("[RETRANSLATE] Failed to clear credentials: {}", save_err);
+                } else {
+                    println!("[RETRANSLATE] ✅ Credentials cleared, showing welcome screen");
+                    let _ = app.emit("credentials-missing", ());
+                }
+            }
+
+            let _ = app.emit("translation-error", error_msg);
         }
     }
 }
@@ -214,6 +294,8 @@ pub fn run() {
             windows::hide_translator_window,
             settings::get_settings,
             settings::save_settings,
+            settings::test_api_credentials,
+            enhance_text_with_instruction,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

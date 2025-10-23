@@ -1,4 +1,4 @@
-import { Box, Typography, Button, Stack, Paper } from "@mui/material";
+import { Box, Typography, Button, Stack } from "@mui/material";
 import KeyIcon from "@mui/icons-material/Key";
 import LoginIcon from "@mui/icons-material/Login";
 
@@ -13,23 +13,28 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
 
   return (
     <Box
+      data-tauri-drag-region
       sx={{
         width: "100%",
         height: "100vh",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         background: "#1a1a1a",
+        padding: 4,
+        cursor: "move",
       }}
     >
-      <Paper
-        elevation={0}
+      <Box
         sx={{
-          maxWidth: 480,
-          width: "90%",
-          padding: 5,
-          background: "#242424",
           textAlign: "center",
+          maxWidth: 440,
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          pointerEvents: "auto",
         }}
       >
         <Box
@@ -37,34 +42,36 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
           src="/logo.png"
           alt="Langra Logo"
           sx={{
-            width: 80,
-            height: 80,
-            mb: 2,
+            width: 120,
+            height: 120,
+            mb: 3,
+            display: "block",
           }}
         />
+
         <Typography
-          variant="h5"
+          variant="h4"
           sx={{
             color: "#e0e0e0",
             fontWeight: 500,
-            mb: 2,
+            mb: 1.5,
           }}
         >
           Welcome to Langra
         </Typography>
 
         <Typography
-          variant="body2"
+          variant="body1"
           sx={{
             color: "#b3b3b3",
-            mb: 3,
+            mb: 4,
             lineHeight: 1.6,
           }}
         >
           Choose how you want to get started
         </Typography>
 
-        <Stack spacing={1.5}>
+        <Stack spacing={2} sx={{ pointerEvents: "auto" }}>
           <Button
             variant="contained"
             fullWidth
@@ -76,6 +83,9 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
               color: "#000",
               textTransform: "none",
               fontWeight: 500,
+              py: 1.5,
+              fontSize: "0.95rem",
+              cursor: "pointer",
               "&:hover": {
                 backgroundColor: "#42a5f5",
               },
@@ -94,6 +104,9 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
               color: "#e0e0e0",
               textTransform: "none",
               fontWeight: 500,
+              py: 1.5,
+              fontSize: "0.95rem",
+              cursor: "pointer",
               "&:hover": {
                 borderColor: "#64b5f6",
                 backgroundColor: "#333333",
@@ -109,12 +122,13 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
           sx={{
             color: "#808080",
             display: "block",
-            mt: 3,
+            mt: 4,
+            fontSize: "0.8rem",
           }}
         >
           Your API keys are stored locally and never shared
         </Typography>
-      </Paper>
+      </Box>
     </Box>
   );
 }

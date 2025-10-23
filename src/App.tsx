@@ -3,6 +3,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { invoke } from "@tauri-apps/api/core";
 import { TranslationPopup } from "./TranslationPopup";
 import { WelcomeScreen } from "./WelcomeScreen";
+import { SuccessScreen } from "./SuccessScreen";
 import { SettingsDialog } from "./SettingsDialog";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
   });
   const [mode, setMode] = useState<"translate" | "enhance">("translate");
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -30,6 +32,25 @@ function App() {
       }
     };
     loadMode();
+
+    const checkCredentials = async () => {
+      try {
+        const settings: any = await invoke("get_settings");
+        console.log("[FRONTEND] Checking credentials on startup...");
+
+        const hasCredentials = settings.provider === "azure"
+          ? settings.azure_endpoint && settings.azure_api_key
+          : settings.openai_api_key;
+
+        if (!hasCredentials) {
+          console.log("[FRONTEND] No credentials found, showing welcome screen");
+          setShowWelcome(true);
+        }
+      } catch (error) {
+        console.error("[FRONTEND] Failed to check credentials:", error);
+      }
+    };
+    checkCredentials();
   }, []);
 
   useEffect(() => {
@@ -142,6 +163,14 @@ function App() {
   };
 
 
+  const handleClearAndStream = () => {
+    setPopup((prev) => ({
+      ...prev,
+      text: "",
+      isStreaming: true,
+    }));
+  };
+
   const handleModeChange = (newMode: "translate" | "enhance") => {
     console.log("[FRONTEND] Mode changed to:", newMode);
     setMode(newMode);
@@ -167,14 +196,24 @@ function App() {
     setSettingsOpen(true);
   };
 
-  const handleCloseSettings = () => {
+  const handleCloseSettings = async (credentialsSaved?: boolean) => {
+    console.log("[FRONTEND] Settings closed, credentials saved:", credentialsSaved);
     setSettingsOpen(false);
-    setShowWelcome(false);
+    if (credentialsSaved === true) {
+      setShowWelcome(false);
+      setShowSuccess(true);
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
   };
 
   return (
-    <div className="w-full h-screen bg-transparent">
-      {showWelcome ? (
+    <div className="w-full h-screen" style={{ background: "#1a1a1a" }}>
+      {showSuccess ? (
+        <SuccessScreen onClose={handleSuccessClose} />
+      ) : showWelcome ? (
         <WelcomeScreen onOpenSettings={handleOpenSettings} />
       ) : (
         <TranslationPopup
@@ -188,6 +227,7 @@ function App() {
           onClose={handleClose}
           onLanguageSwitch={handleLanguageSwitch}
           onModeChange={handleModeChange}
+          onClearAndStream={handleClearAndStream}
         />
       )}
 
