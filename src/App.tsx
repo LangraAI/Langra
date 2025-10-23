@@ -61,6 +61,23 @@ function App() {
       try {
         const currentWindow = getCurrentWebviewWindow();
 
+        const unlistenPermission = await currentWindow.listen("check-input-monitoring-permission", () => {
+          console.log("[FRONTEND] Checking Input Monitoring permission...");
+          if (window.confirm(
+            "Langra needs Input Monitoring permission to detect Cmd+C+C.\n\n" +
+            "Click OK to open System Settings.\n\n" +
+            "Then:\n" +
+            "1. Click the lock and enter your password\n" +
+            "2. Click the + button\n" +
+            "3. Navigate to /Applications/Langra.app\n" +
+            "4. Toggle it ON\n" +
+            "5. Restart Langra"
+          )) {
+            invoke("open_input_monitoring_settings");
+          }
+        });
+        unlistenFns.push(unlistenPermission);
+
         const unlistenStart = await currentWindow.listen<{detected_language: string, original_text: string}>("translation-start", (event) => {
           console.log("[FRONTEND] Translation started - opening popup");
           setPopup({
