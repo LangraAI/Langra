@@ -72,7 +72,8 @@ export function TranslationPopup({
           elevation={0}
           sx={{
             width: "100%",
-            height: "100%",
+            height: "100vh",
+            maxHeight: "100vh",
             display: "flex",
             flexDirection: "column",
             borderRadius: 0,
@@ -94,9 +95,11 @@ export function TranslationPopup({
               sx={{
                 display: "flex",
                 alignItems: "center",
-                padding: "8px 16px",
-                gap: 2,
+                padding: "8px 12px",
+                gap: 1,
                 minHeight: "40px",
+                minWidth: 0,
+                overflow: "hidden",
               }}
             >
               <IconButton
@@ -104,11 +107,12 @@ export function TranslationPopup({
                 onClick={(e) => setSettingsAnchor(e.currentTarget)}
                 sx={{
                   color: "#999999",
-                  padding: "6px",
+                  padding: "4px",
+                  flexShrink: 0,
                   "&:hover": { backgroundColor: "#333333" },
                 }}
               >
-                <SettingsIcon sx={{ fontSize: 18 }} />
+                <SettingsIcon sx={{ fontSize: 16 }} />
               </IconButton>
 
               <Box
@@ -119,6 +123,8 @@ export function TranslationPopup({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  minWidth: 0,
+                  overflow: "hidden",
                 }}
               >
                 <ToggleButtonGroup
@@ -131,16 +137,17 @@ export function TranslationPopup({
                   }}
                   size="small"
                   sx={{
-                    height: "28px",
+                    height: "26px",
+                    flexShrink: 0,
                     "& .MuiToggleButton-root": {
-                      fontSize: "0.75rem",
-                      padding: "4px 12px",
+                      fontSize: "0.7rem",
+                      padding: "3px 10px",
                       color: "#b3b3b3",
                       border: "1px solid #4a4a4a",
                       textTransform: "none",
                       fontWeight: 500,
                       lineHeight: "1.2",
-                      minWidth: "72px",
+                      minWidth: "60px",
                       "&.Mui-selected": {
                         backgroundColor: "#64b5f6",
                         color: "#000",
@@ -164,7 +171,7 @@ export function TranslationPopup({
                 </ToggleButtonGroup>
               </Box>
 
-              <Box sx={{ width: 32 }} />
+              <Box sx={{ width: 20, flexShrink: 0 }} />
             </Box>
 
             {mode === "translate" && (
@@ -175,9 +182,11 @@ export function TranslationPopup({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    padding: "8px 16px",
+                    padding: "8px 12px",
                     gap: 1,
                     minHeight: "44px",
+                    minWidth: 0,
+                    overflow: "hidden",
                   }}
                 >
                   <Chip
@@ -219,30 +228,6 @@ export function TranslationPopup({
               </>
             )}
 
-            {mode === "enhance" && (
-              <>
-                <Divider sx={{ borderColor: "#333333" }} />
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "8px 16px",
-                    minHeight: "44px",
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#b3b3b3",
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    Fixing {detectedLanguage === "de" ? "German" : "English"} grammar and spelling
-                  </Typography>
-                </Box>
-              </>
-            )}
 
             <Menu
               anchorEl={settingsAnchor}
@@ -267,7 +252,7 @@ export function TranslationPopup({
               flex: 1,
               overflow: "auto",
               padding: 3,
-              minHeight: 120,
+              minHeight: 0,
               position: "relative",
               "&::-webkit-scrollbar": {
                 width: "6px",
