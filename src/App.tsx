@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { invoke } from "@tauri-apps/api/core";
 import { TranslationPopup } from "./TranslationPopup";
+import { WelcomeScreen } from "./WelcomeScreen";
+import { SettingsDialog } from "./SettingsDialog";
 
 function App() {
   const [popup, setPopup] = useState({
@@ -12,6 +14,8 @@ function App() {
     originalText: "",
   });
   const [mode, setMode] = useState<"translate" | "enhance">("translate");
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const loadMode = async () => {
@@ -70,6 +74,19 @@ function App() {
           setPopup((prev) => ({ ...prev, isOpen: false, text: "", isStreaming: false }));
         });
         unlistenFns.push(unlistenError);
+
+        const unlistenCredentialsMissing = await currentWindow.listen("credentials-missing", () => {
+          console.log("[FRONTEND] Credentials missing, showing welcome screen");
+          setShowWelcome(true);
+          setPopup({
+            isOpen: false,
+            text: "",
+            isStreaming: false,
+            detectedLanguage: "en",
+            originalText: "",
+          });
+        });
+        unlistenFns.push(unlistenCredentialsMissing);
 
         console.log("[FRONTEND] All event listeners registered");
       } catch (error) {
@@ -146,20 +163,35 @@ function App() {
     }
   };
 
+  const handleOpenSettings = () => {
+    setSettingsOpen(true);
+  };
+
+  const handleCloseSettings = () => {
+    setSettingsOpen(false);
+    setShowWelcome(false);
+  };
+
   return (
     <div className="w-full h-screen bg-transparent">
-      <TranslationPopup
-        translation={popup.text}
-        isOpen={popup.isOpen}
-        isStreaming={popup.isStreaming}
-        detectedLanguage={popup.detectedLanguage}
-        mode={mode}
-        onCopy={handleCopy}
-        onReplace={handleReplace}
-        onClose={handleClose}
-        onLanguageSwitch={handleLanguageSwitch}
-        onModeChange={handleModeChange}
-      />
+      {showWelcome ? (
+        <WelcomeScreen onOpenSettings={handleOpenSettings} />
+      ) : (
+        <TranslationPopup
+          translation={popup.text}
+          isOpen={popup.isOpen}
+          isStreaming={popup.isStreaming}
+          detectedLanguage={popup.detectedLanguage}
+          mode={mode}
+          onCopy={handleCopy}
+          onReplace={handleReplace}
+          onClose={handleClose}
+          onLanguageSwitch={handleLanguageSwitch}
+          onModeChange={handleModeChange}
+        />
+      )}
+
+      <SettingsDialog open={settingsOpen} onClose={handleCloseSettings} />
     </div>
   );
 }

@@ -1,9 +1,9 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::env;
 use tauri::{AppHandle, Emitter};
+use crate::settings;
 
 #[derive(Serialize)]
 struct AzureRequest {
@@ -47,17 +47,8 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
         source_lang, target_lang, text
     );
 
-    println!("[TRANSLATOR] Loading Azure credentials from env...");
-    let azure_endpoint = env::var("AZURE_OPENAI_ENDPOINT")?;
-    let azure_key = env::var("AZURE_OPENAI_API_KEY")?;
-    let deployment_name = env::var("AZURE_OPENAI_DEPLOYMENT").unwrap_or_else(|_| "gpt-4o-mini".to_string());
-
-    let url = format!(
-        "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
-        azure_endpoint, deployment_name
-    );
-
-    println!("[TRANSLATOR] Request URL: {}", url);
+    println!("[TRANSLATOR] Loading settings...");
+    let settings = settings::load_settings();
 
     let client = Client::new();
     let request_body = AzureRequest {
@@ -70,14 +61,42 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
         stream: true,
     };
 
-    println!("[TRANSLATOR] Sending streaming request to Azure OpenAI...");
-    let response = client
-        .post(&url)
-        .header("api-key", azure_key)
-        .header("Content-Type", "application/json")
-        .json(&request_body)
-        .send()
-        .await?;
+    let response = if settings.provider == "azure" {
+        println!("[TRANSLATOR] Using Azure OpenAI provider");
+        if settings.azure_endpoint.is_empty() || settings.azure_api_key.is_empty() {
+            return Err(anyhow!("Azure OpenAI credentials not configured. Please open Settings and add your API key."));
+        }
+
+        let url = format!(
+            "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
+            settings.azure_endpoint, settings.azure_deployment
+        );
+        println!("[TRANSLATOR] Request URL: {}", url);
+
+        client
+            .post(&url)
+            .header("api-key", &settings.azure_api_key)
+            .header("Content-Type", "application/json")
+            .json(&request_body)
+            .send()
+            .await?
+    } else {
+        println!("[TRANSLATOR] Using OpenAI provider");
+        if settings.openai_api_key.is_empty() {
+            return Err(anyhow!("OpenAI API key not configured. Please open Settings and add your API key."));
+        }
+
+        let url = "https://api.openai.com/v1/chat/completions";
+        println!("[TRANSLATOR] Request URL: {}", url);
+
+        client
+            .post(url)
+            .header("Authorization", format!("Bearer {}", settings.openai_api_key))
+            .header("Content-Type", "application/json")
+            .json(&request_body)
+            .send()
+            .await?
+    };
 
     println!("[TRANSLATOR] Response status: {}", response.status());
 
@@ -146,17 +165,8 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
         lang_name, text
     );
 
-    println!("[ENHANCE] Loading Azure credentials from env...");
-    let azure_endpoint = env::var("AZURE_OPENAI_ENDPOINT")?;
-    let azure_key = env::var("AZURE_OPENAI_API_KEY")?;
-    let deployment_name = env::var("AZURE_OPENAI_DEPLOYMENT").unwrap_or_else(|_| "gpt-4o-mini".to_string());
-
-    let url = format!(
-        "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
-        azure_endpoint, deployment_name
-    );
-
-    println!("[ENHANCE] Request URL: {}", url);
+    println!("[ENHANCE] Loading settings...");
+    let settings = settings::load_settings();
 
     let client = Client::new();
     let request_body = AzureRequest {
@@ -169,14 +179,42 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
         stream: true,
     };
 
-    println!("[ENHANCE] Sending streaming request to Azure OpenAI...");
-    let response = client
-        .post(&url)
-        .header("api-key", azure_key)
-        .header("Content-Type", "application/json")
-        .json(&request_body)
-        .send()
-        .await?;
+    let response = if settings.provider == "azure" {
+        println!("[ENHANCE] Using Azure OpenAI provider");
+        if settings.azure_endpoint.is_empty() || settings.azure_api_key.is_empty() {
+            return Err(anyhow!("Azure OpenAI credentials not configured. Please open Settings and add your API key."));
+        }
+
+        let url = format!(
+            "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
+            settings.azure_endpoint, settings.azure_deployment
+        );
+        println!("[ENHANCE] Request URL: {}", url);
+
+        client
+            .post(&url)
+            .header("api-key", &settings.azure_api_key)
+            .header("Content-Type", "application/json")
+            .json(&request_body)
+            .send()
+            .await?
+    } else {
+        println!("[ENHANCE] Using OpenAI provider");
+        if settings.openai_api_key.is_empty() {
+            return Err(anyhow!("OpenAI API key not configured. Please open Settings and add your API key."));
+        }
+
+        let url = "https://api.openai.com/v1/chat/completions";
+        println!("[ENHANCE] Request URL: {}", url);
+
+        client
+            .post(url)
+            .header("Authorization", format!("Bearer {}", settings.openai_api_key))
+            .header("Content-Type", "application/json")
+            .json(&request_body)
+            .send()
+            .await?
+    };
 
     println!("[ENHANCE] Response status: {}", response.status());
 

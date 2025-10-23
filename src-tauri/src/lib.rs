@@ -4,6 +4,7 @@ mod utils;
 mod windows;
 mod insertion;
 mod keyboard_monitor;
+mod settings;
 
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -45,6 +46,20 @@ pub async fn trigger_translation(app: &AppHandle) {
     windows::show_translator_window(true);
 
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+    println!("[TRIGGER] Checking credentials...");
+    let settings = settings::load_settings();
+    let has_credentials = if settings.provider == "azure" {
+        !settings.azure_endpoint.is_empty() && !settings.azure_api_key.is_empty()
+    } else {
+        !settings.openai_api_key.is_empty()
+    };
+
+    if !has_credentials {
+        println!("[TRIGGER] No credentials configured, showing welcome screen");
+        let _ = app.emit("credentials-missing", ());
+        return;
+    }
 
     println!("[TRIGGER] Reading clipboard (first Cmd+C already copied it)");
 
@@ -197,6 +212,8 @@ pub fn run() {
             get_mode,
             insertion::insert_translation_into_previous_input,
             windows::hide_translator_window,
+            settings::get_settings,
+            settings::save_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

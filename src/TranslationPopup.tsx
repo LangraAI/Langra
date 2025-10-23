@@ -1,7 +1,8 @@
-import { Box, Paper, Typography, Button, Stack, Fade, CircularProgress, IconButton, Menu, MenuItem, Chip, Divider, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Box, Paper, Typography, Button, Stack, Fade, CircularProgress, IconButton, Chip, Divider, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import { SettingsDialog } from "./SettingsDialog";
 
 interface PopupProps {
   translation: string;
@@ -29,7 +30,7 @@ export function TranslationPopup({
   onModeChange,
 }: PopupProps) {
   const contentEndRef = useRef<HTMLDivElement>(null);
-  const [settingsAnchor, setSettingsAnchor] = useState<null | HTMLElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -104,7 +105,7 @@ export function TranslationPopup({
             >
               <IconButton
                 size="small"
-                onClick={(e) => setSettingsAnchor(e.currentTarget)}
+                onClick={() => setSettingsOpen(true)}
                 sx={{
                   color: "#999999",
                   padding: "4px",
@@ -228,24 +229,6 @@ export function TranslationPopup({
               </>
             )}
 
-
-            <Menu
-              anchorEl={settingsAnchor}
-              open={Boolean(settingsAnchor)}
-              onClose={() => setSettingsAnchor(null)}
-              slotProps={{
-                paper: {
-                  sx: {
-                    background: "#2a2a2a",
-                    color: "#e0e0e0",
-                  },
-                },
-              }}
-            >
-              <MenuItem onClick={() => setSettingsAnchor(null)}>
-                <Typography variant="body2">Settings (Coming Soon)</Typography>
-              </MenuItem>
-            </Menu>
           </Box>
           <Box
             sx={{
@@ -436,6 +419,8 @@ export function TranslationPopup({
           </Box>
         </Paper>
       </Fade>
+
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Box>
   );
 }

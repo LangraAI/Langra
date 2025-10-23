@@ -1,7 +1,7 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::env;
+use crate::settings;
 
 #[derive(Serialize)]
 struct AzureRequest {
@@ -73,15 +73,7 @@ struct LanguageResult {
 pub async fn detect_language(text: &str) -> Result<String> {
     println!("[LANGUAGE_DETECTOR] Detecting language for text: '{}'", &text[..text.len().min(100)]);
 
-    let azure_endpoint = env::var("AZURE_OPENAI_ENDPOINT")?;
-    let azure_key = env::var("AZURE_OPENAI_API_KEY")?;
-    let deployment_name = env::var("AZURE_OPENAI_DEPLOYMENT").unwrap_or_else(|_| "gpt-4o-mini".to_string());
-
-    let url = format!(
-        "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
-        azure_endpoint, deployment_name
-    );
-
+    let settings = settings::load_settings();
     let client = Client::new();
 
     let tools = vec![Tool {
@@ -114,13 +106,38 @@ pub async fn detect_language(text: &str) -> Result<String> {
         tool_choice: "auto".to_string(),
     };
 
-    let response = client
-        .post(&url)
-        .header("api-key", azure_key)
-        .header("Content-Type", "application/json")
-        .json(&request_body)
-        .send()
-        .await?;
+    let response = if settings.provider == "azure" {
+        if settings.azure_endpoint.is_empty() || settings.azure_api_key.is_empty() {
+            return Err(anyhow!("Azure OpenAI credentials not configured"));
+        }
+
+        let url = format!(
+            "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
+            settings.azure_endpoint, settings.azure_deployment
+        );
+
+        client
+            .post(&url)
+            .header("api-key", &settings.azure_api_key)
+            .header("Content-Type", "application/json")
+            .json(&request_body)
+            .send()
+            .await?
+    } else {
+        if settings.openai_api_key.is_empty() {
+            return Err(anyhow!("OpenAI API key not configured"));
+        }
+
+        let url = "https://api.openai.com/v1/chat/completions";
+
+        client
+            .post(url)
+            .header("Authorization", format!("Bearer {}", settings.openai_api_key))
+            .header("Content-Type", "application/json")
+            .json(&request_body)
+            .send()
+            .await?
+    };
 
     let azure_response: AzureResponse = response.json().await?;
 
