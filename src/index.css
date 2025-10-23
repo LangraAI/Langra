@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+*[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+body {
+  background: transparent !important;
+  overflow: hidden;
+}
+
+#root {
+  background: transparent !important;
+}
