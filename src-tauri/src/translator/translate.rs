@@ -5,7 +5,7 @@ use super::chunking::chunk_by_paragraphs;
 use super::client::call_openai;
 use super::types::{create_translation_tool, TranslationResult};
 
-async fn translate_chunk(text: &str, source_lang_name: &str, target_lang_name: &str) -> Result<String> {
+async fn translate_chunk(text: &str, source_lang_name: &str, target_lang_name: &str, app: &AppHandle) -> Result<String> {
     let settings = settings::load_settings();
 
     let style_instruction = match settings.style.as_str() {
@@ -21,7 +21,7 @@ async fn translate_chunk(text: &str, source_lang_name: &str, target_lang_name: &
     };
 
     let tool = create_translation_tool(source_lang_name, target_lang_name);
-    let result: TranslationResult = call_openai(system_prompt, text.to_string(), tool, "provide_translation").await?;
+    let result: TranslationResult = call_openai(system_prompt, text.to_string(), tool, "provide_translation", app).await?;
 
     Ok(result.translated_text)
 }
@@ -45,11 +45,13 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
         if chunks.len() > 1 {
             println!("[TRANSLATOR] Translating chunk {}/{}", i + 1, chunks.len());
         }
-        let result = translate_chunk(chunk, source_lang_name, target_lang_name).await?;
-        results.push(result);
+        let result = translate_chunk(chunk, source_lang_name, target_lang_name, app).await?;
+        results.push(result.clone());
+
+        let accumulated = results.join("\n\n");
+        let _ = app.emit("translation-chunk", accumulated);
     }
 
     let final_result = results.join("\n\n");
-    let _ = app.emit("translation-chunk", final_result.clone());
     Ok(final_result)
 }

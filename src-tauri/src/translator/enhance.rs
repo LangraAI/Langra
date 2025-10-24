@@ -20,10 +20,9 @@ pub async fn enhance_stream_with_instruction(
     );
 
     let tool = create_improvement_tool(lang_name);
-    let result: ImprovementResult = call_openai(system_prompt, text.to_string(), tool, "provide_improved_text").await?;
+    let result: ImprovementResult = call_openai(system_prompt, text.to_string(), tool, "provide_improved_text", app).await?;
 
     println!("[ENHANCE_CUSTOM] ✅ Improvement complete");
-    let _ = app.emit("translation-chunk", result.improved_text.clone());
     Ok(result.improved_text)
 }
 
@@ -39,9 +38,8 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
     );
 
     let tool = create_correction_tool(lang_name);
-    let result: CorrectionResult = call_openai(system_prompt, text.to_string(), tool, "provide_corrected_text").await?;
+    let result: CorrectionResult = call_openai(system_prompt, text.to_string(), tool, "provide_corrected_text", app).await?;
 
     println!("[ENHANCE] ✅ Correction complete");
-    let _ = app.emit("translation-chunk", result.corrected_text.clone());
     Ok(result.corrected_text)
 }

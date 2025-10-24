@@ -8,6 +8,7 @@ import KeyIcon from "@mui/icons-material/Key";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import { SettingsDialog } from "./SettingsDialog";
 import { invoke } from "@tauri-apps/api/core";
+import { StreamingText } from "./StreamingText";
 
 interface PopupProps {
   translation: string;
@@ -36,13 +37,16 @@ export function TranslationPopup({
   onModeChange,
   onClearAndStream,
 }: PopupProps) {
-  const contentEndRef = useRef<HTMLDivElement>(null);
   const enhanceInputRef = useRef<HTMLInputElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customInstruction, setCustomInstruction] = useState("");
   const [showEnhanceInput, setShowEnhanceInput] = useState(false);
+
+  useEffect(() => {
+    console.log("[POPUP] translation:", translation?.substring(0, 50), "isStreaming:", isStreaming);
+  }, [translation, isStreaming]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,11 +81,6 @@ export function TranslationPopup({
     };
   }, [isOpen, onClose, onCopy, onReplace, isStreaming, translation, mode, showEnhanceInput]);
 
-  useEffect(() => {
-    if (isStreaming && contentEndRef.current) {
-      contentEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [translation, isStreaming]);
 
   useEffect(() => {
     if (mode === "translate") {
@@ -374,7 +373,7 @@ export function TranslationPopup({
                     cursor: "move",
                   }}
                 >
-                  {translation}
+                  <StreamingText text={translation} isStreaming={isStreaming} />
                   {isStreaming && (
                     <Box
                       component="span"
@@ -393,8 +392,6 @@ export function TranslationPopup({
                     />
                   )}
                 </Typography>
-
-                <div ref={contentEndRef} />
               </>
             )}
           </Box>
@@ -479,7 +476,25 @@ export function TranslationPopup({
                 Close
               </Button>
 
-              <Box data-tauri-drag-region sx={{ flex: 1, cursor: "move" }} />
+              <Box
+                data-tauri-drag-region
+                sx={{
+                  flex: 1,
+                  cursor: "move",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {isStreaming && (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CircularProgress size={14} sx={{ color: "#64b5f6" }} />
+                    <Typography variant="caption" sx={{ color: "#808080", fontSize: "0.75rem" }}>
+                      {mode === "enhance" ? "Fixing..." : "Translating..."}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
 
               {mode === "enhance" && !isStreaming && translation && (
                 <Tooltip title="AI Mode (⌘I)" placement="top" arrow>

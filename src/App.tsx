@@ -94,8 +94,21 @@ function App() {
         });
         unlistenFns.push(unlistenStart);
 
+        const unlistenPartial = await currentWindow.listen<string>("translation-partial", (event) => {
+          console.log("[FRONTEND] Received partial text:", event.payload.substring(0, 50) + "...");
+          setPopup((prev) => {
+            console.log("[FRONTEND] Updating popup state with partial text");
+            return {
+              ...prev,
+              text: event.payload,
+              isStreaming: true,
+            };
+          });
+        });
+        unlistenFns.push(unlistenPartial);
+
         const unlistenChunk = await currentWindow.listen<string>("translation-chunk", (event) => {
-          console.log("[FRONTEND] Received chunk:", event.payload);
+          console.log("[FRONTEND] Received chunk");
           setPopup((prev) => ({
             ...prev,
             text: event.payload,

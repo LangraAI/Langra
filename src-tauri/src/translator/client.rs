@@ -1,16 +1,64 @@
 use anyhow::{Result, anyhow};
 use futures_util::StreamExt;
 use reqwest::Client;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
+use tauri::{AppHandle, Emitter};
 use crate::settings;
 use super::types::{AzureRequest, Message, Tool, StreamResponse};
 
-pub async fn call_openai<T: DeserializeOwned>(
+fn extract_partial_text(json: &str, field_name: &str) -> Option<String> {
+    let pattern = format!("\"{}\":\"", field_name);
+    let start_idx = json.find(&pattern)?;
+    let text_start = start_idx + pattern.len();
+    let remaining = &json[text_start..];
+
+    let mut result = String::new();
+    let mut chars = remaining.chars();
+    let mut escape_next = false;
+
+    while let Some(ch) = chars.next() {
+        if escape_next {
+            match ch {
+                'n' => result.push('\n'),
+                't' => result.push('\t'),
+                'r' => result.push('\r'),
+                '"' => result.push('"'),
+                '\\' => result.push('\\'),
+                _ => {
+                    result.push('\\');
+                    result.push(ch);
+                }
+            }
+            escape_next = false;
+        } else if ch == '\\' {
+            escape_next = true;
+        } else if ch == '"' {
+            break;
+        } else {
+            result.push(ch);
+        }
+    }
+
+    if result.is_empty() {
+        None
+    } else {
+        Some(result)
+    }
+}
+
+pub async fn call_openai<T: DeserializeOwned + Serialize>(
     system_prompt: String,
     user_text: String,
     tool: Tool,
     tool_name: &str,
+    app: &AppHandle,
 ) -> Result<T> {
+    let field_name = match tool_name {
+        "provide_translation" => "translated_text",
+        "provide_corrected_text" => "corrected_text",
+        "provide_improved_text" => "improved_text",
+        _ => "translated_text",
+    };
     let settings = settings::load_settings();
 
     let client = Client::new();
@@ -68,6 +116,7 @@ pub async fn call_openai<T: DeserializeOwned>(
     let mut stream = response.bytes_stream();
     let mut full_arguments = String::new();
     let mut incomplete_line = String::new();
+    let mut last_emitted_length = 0;
 
     while let Some(chunk_result) = stream.next().await {
         match chunk_result {
@@ -106,6 +155,16 @@ pub async fn call_openai<T: DeserializeOwned>(
 
                 if chunk_str.ends_with('\n') {
                     incomplete_line.clear();
+                }
+
+                if let Some(partial_text) = extract_partial_text(&full_arguments, field_name) {
+                    if partial_text.len() > last_emitted_length {
+                        println!("[STREAMING] Emitting partial text (length: {})", partial_text.len());
+                        last_emitted_length = partial_text.len();
+                        let _ = app.emit("translation-partial", partial_text);
+                    }
+                } else if !full_arguments.is_empty() {
+                    println!("[STREAMING] Could not extract partial text from: {}", full_arguments);
                 }
             }
             Err(e) => {

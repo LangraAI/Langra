@@ -63,17 +63,17 @@ pub struct FunctionDelta {
     pub arguments: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct TranslationResult {
     pub translated_text: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct CorrectionResult {
     pub corrected_text: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct ImprovementResult {
     pub improved_text: String,
 }
