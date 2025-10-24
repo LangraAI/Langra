@@ -59,6 +59,7 @@ pub async fn call_openai<T: DeserializeOwned + Serialize>(
         "provide_improved_text" => "improved_text",
         _ => "translated_text",
     };
+    let estimated_output_length = (user_text.len() as f32 * 1.2) as usize;
     let settings = settings::load_settings();
 
     let client = Client::new();
@@ -161,10 +162,11 @@ pub async fn call_openai<T: DeserializeOwned + Serialize>(
                     if partial_text.len() > last_emitted_length {
                         println!("[STREAMING] Emitting partial text (length: {})", partial_text.len());
                         last_emitted_length = partial_text.len();
-                        let _ = app.emit("translation-partial", partial_text);
+                        let _ = app.emit("translation-partial", partial_text.clone());
+
+                        let stream_progress = ((partial_text.len() as f32 / estimated_output_length as f32) * 100.0).min(99.0) as i32;
+                        let _ = app.emit("translation-progress", stream_progress);
                     }
-                } else if !full_arguments.is_empty() {
-                    println!("[STREAMING] Could not extract partial text from: {}", full_arguments);
                 }
             }
             Err(e) => {

@@ -16,6 +16,7 @@ interface PopupProps {
   isStreaming: boolean;
   detectedLanguage: string;
   mode: "translate" | "enhance";
+  progress: number;
   onCopy: () => void;
   onReplace: () => void;
   onClose: () => void;
@@ -30,6 +31,7 @@ export function TranslationPopup({
   isStreaming,
   detectedLanguage,
   mode,
+  progress,
   onCopy,
   onReplace,
   onClose,
@@ -489,8 +491,8 @@ export function TranslationPopup({
                 {isStreaming && (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={14} sx={{ color: "#64b5f6" }} />
-                    <Typography variant="caption" sx={{ color: "#808080", fontSize: "0.75rem" }}>
-                      {mode === "enhance" ? "Fixing..." : "Translating..."}
+                    <Typography variant="caption" sx={{ color: "#b3b3b3", fontSize: "0.75rem", fontWeight: 500 }}>
+                      {progress}%
                     </Typography>
                   </Box>
                 )}

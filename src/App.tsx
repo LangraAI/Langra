@@ -13,6 +13,7 @@ function App() {
     isStreaming: false,
     detectedLanguage: "en",
     originalText: "",
+    progress: 0,
   });
   const [mode, setMode] = useState<"translate" | "enhance">("translate");
   const [showWelcome, setShowWelcome] = useState(false);
@@ -90,9 +91,19 @@ function App() {
             isStreaming: true,
             detectedLanguage: event.payload.detected_language,
             originalText: event.payload.original_text,
+            progress: 0,
           });
         });
         unlistenFns.push(unlistenStart);
+
+        const unlistenProgress = await currentWindow.listen<number>("translation-progress", (event) => {
+          console.log("[FRONTEND] Progress:", event.payload + "%");
+          setPopup((prev) => ({
+            ...prev,
+            progress: event.payload,
+          }));
+        });
+        unlistenFns.push(unlistenProgress);
 
         const unlistenPartial = await currentWindow.listen<string>("translation-partial", (event) => {
           console.log("[FRONTEND] Received partial text:", event.payload.substring(0, 50) + "...");
@@ -138,6 +149,7 @@ function App() {
             isStreaming: false,
             detectedLanguage: "en",
             originalText: "",
+            progress: 0,
           });
         });
         unlistenFns.push(unlistenCredentialsMissing);
@@ -159,7 +171,7 @@ function App() {
     try {
       const textToCopy = popup.text;
       await invoke("copy_to_clipboard", { text: textToCopy });
-      setPopup({ isOpen: false, text: "", isStreaming: false, detectedLanguage: "en", originalText: "" });
+      setPopup({ isOpen: false, text: "", isStreaming: false, detectedLanguage: "en", originalText: "", progress: 0 });
       await invoke("hide_translator_window");
     } catch (error) {
       console.error("Copy failed:", error);
@@ -170,7 +182,7 @@ function App() {
     try {
       const textToInsert = popup.text;
       console.log("[FRONTEND] Replace clicked, text to insert:", textToInsert);
-      setPopup({ isOpen: false, text: "", isStreaming: false, detectedLanguage: "en", originalText: "" });
+      setPopup({ isOpen: false, text: "", isStreaming: false, detectedLanguage: "en", originalText: "", progress: 0 });
       console.log("[FRONTEND] Hiding window...");
       await invoke("hide_translator_window");
       console.log("[FRONTEND] Calling insert_translation_into_previous_input...");
@@ -255,6 +267,7 @@ function App() {
           isStreaming={popup.isStreaming}
           detectedLanguage={popup.detectedLanguage}
           mode={mode}
+          progress={popup.progress}
           onCopy={handleCopy}
           onReplace={handleReplace}
           onClose={handleClose}
