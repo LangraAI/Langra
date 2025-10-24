@@ -37,6 +37,7 @@ export function TranslationPopup({
   onClearAndStream,
 }: PopupProps) {
   const contentEndRef = useRef<HTMLDivElement>(null);
+  const enhanceInputRef = useRef<HTMLInputElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -87,6 +88,18 @@ export function TranslationPopup({
       setShowEnhanceInput(false);
     }
   }, [mode]);
+
+  useEffect(() => {
+    if (showEnhanceInput && enhanceInputRef.current) {
+      enhanceInputRef.current.focus();
+    }
+  }, [showEnhanceInput]);
+
+  useEffect(() => {
+    if (!isStreaming && showEnhanceInput && enhanceInputRef.current) {
+      enhanceInputRef.current.focus();
+    }
+  }, [isStreaming, showEnhanceInput]);
 
   if (!isOpen) {
     return null;
@@ -395,6 +408,7 @@ export function TranslationPopup({
                   placeholder="How would you like to enhance? (press Enter)"
                   value={customInstruction}
                   onChange={(e) => setCustomInstruction(e.target.value)}
+                  inputRef={enhanceInputRef}
                   onKeyDown={async (e) => {
                     if (e.key === "Enter" && customInstruction.trim()) {
                       e.preventDefault();
@@ -406,6 +420,11 @@ export function TranslationPopup({
                           instruction: customInstruction.trim(),
                         });
                         setCustomInstruction("");
+                        setTimeout(() => {
+                          if (enhanceInputRef.current) {
+                            enhanceInputRef.current.focus();
+                          }
+                        }, 100);
                       } catch (error) {
                         console.error("Enhancement failed:", error);
                       }
