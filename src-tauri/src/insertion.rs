@@ -200,16 +200,54 @@ fn replace_input_with_text(text: &str) -> Result<(), String> {
     }
 
     use arboard::Clipboard;
+    use std::path::PathBuf;
 
     let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
     clipboard.set_text(text).map_err(|e| e.to_string())?;
 
-    thread::sleep(Duration::from_millis(100));
+    thread::sleep(Duration::from_millis(50));
 
-    let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
-    crate::utils::paste(&mut enigo);
+    #[cfg(target_os = "macos")]
+    {
+        println!("[INSERTION] Running replace AppleScript...");
 
-    thread::sleep(Duration::from_millis(100));
+        let script_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources")
+            .join("replace.applescript");
+
+        if !script_path.exists() {
+            return Err(format!("replace.applescript not found at {:?}", script_path));
+        }
+
+        let output = std::process::Command::new("osascript")
+            .arg(&script_path)
+            .output()
+            .map_err(|e| format!("Failed to run applescript: {}", e))?;
+
+        if !output.status.success() {
+            let error = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("AppleScript failed: {}", error));
+        }
+
+        thread::sleep(Duration::from_millis(50));
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        use enigo::{Key, Direction, Keyboard};
+        let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
+
+        println!("[INSERTION] Pressing backspace to delete selected text...");
+        enigo.key(Key::Backspace, Direction::Click).map_err(|e| e.to_string())?;
+        thread::sleep(Duration::from_millis(50));
+
+        println!("[INSERTION] Pasting translation...");
+        enigo.key(Key::Control, Direction::Press).map_err(|e| e.to_string())?;
+        enigo.key(Key::Unicode('v'), Direction::Click).map_err(|e| e.to_string())?;
+        enigo.key(Key::Control, Direction::Release).map_err(|e| e.to_string())?;
+
+        thread::sleep(Duration::from_millis(100));
+    }
 
     Ok(())
 }
@@ -227,8 +265,8 @@ pub async fn insert_translation_into_previous_input(text: String) -> Result<(), 
         }
     }
 
-    println!("[INSERTION] Waiting 300ms...");
-    thread::sleep(Duration::from_millis(300));
+    println!("[INSERTION] Waiting 150ms...");
+    thread::sleep(Duration::from_millis(150));
 
     println!("[INSERTION] Replacing input with text...");
     match replace_input_with_text(&text) {
