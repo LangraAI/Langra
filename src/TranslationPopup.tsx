@@ -1,4 +1,4 @@
-import { Box, Paper, Typography, Button, Stack, Fade, CircularProgress, IconButton, Chip, ToggleButtonGroup, ToggleButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField } from "@mui/material";
+import { Box, Paper, Typography, Button, Stack, Fade, CircularProgress, IconButton, Chip, ToggleButtonGroup, ToggleButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, Tooltip } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
@@ -47,8 +47,25 @@ export function TranslationPopup({
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      const isMod = event.metaKey || event.ctrlKey;
+
       if (event.key === "Escape") {
         onClose();
+      } else if (isMod && event.key === "k") {
+        event.preventDefault();
+        if (!isStreaming && translation) {
+          onCopy();
+        }
+      } else if (isMod && event.key === "l") {
+        event.preventDefault();
+        if (!isStreaming && translation) {
+          onReplace();
+        }
+      } else if (isMod && event.key === "i") {
+        event.preventDefault();
+        if (mode === "enhance" && !isStreaming && translation) {
+          setShowEnhanceInput(!showEnhanceInput);
+        }
       }
     };
 
@@ -57,7 +74,7 @@ export function TranslationPopup({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onCopy, onReplace, isStreaming, translation, mode, showEnhanceInput]);
 
   useEffect(() => {
     if (isStreaming && contentEndRef.current) {
@@ -446,50 +463,58 @@ export function TranslationPopup({
               <Box data-tauri-drag-region sx={{ flex: 1, cursor: "move" }} />
 
               {mode === "enhance" && !isStreaming && translation && (
-                <IconButton
-                  size="small"
-                  onClick={() => setShowEnhanceInput(!showEnhanceInput)}
-                  sx={{
-                    color: showEnhanceInput ? "#64b5f6" : "#b3b3b3",
-                    padding: "6px",
-                    "&:hover": {
-                      backgroundColor: "#333333",
-                    },
-                  }}
-                >
-                  <AutoFixHighIcon sx={{ fontSize: 20 }} />
-                </IconButton>
+                <Tooltip title="AI Mode (⌘I)" placement="top" arrow>
+                  <IconButton
+                    size="small"
+                    onClick={() => setShowEnhanceInput(!showEnhanceInput)}
+                    sx={{
+                      color: showEnhanceInput ? "#64b5f6" : "#b3b3b3",
+                      padding: "6px",
+                      "&:hover": {
+                        backgroundColor: "#333333",
+                      },
+                    }}
+                  >
+                    <AutoFixHighIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
               )}
 
-              <Button
-                variant="text"
-                onClick={onCopy}
-                size="small"
-                disabled={isStreaming || !translation}
-                sx={{
-                  minWidth: 64,
-                  height: 36,
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  textTransform: "none",
-                  color: "#64b5f6",
-                  "&:hover": {
-                    backgroundColor: "#333333",
-                  },
-                }}
-              >
-                Copy
-              </Button>
+              <Tooltip title="Copy (⌘K)" placement="top" arrow>
+                <span>
+                  <Button
+                    variant="text"
+                    onClick={onCopy}
+                    size="small"
+                    disabled={isStreaming || !translation}
+                    sx={{
+                      minWidth: 64,
+                      height: 36,
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                      textTransform: "none",
+                      color: "#64b5f6",
+                      "&:hover": {
+                        backgroundColor: "#333333",
+                      },
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </span>
+              </Tooltip>
 
-              <Button
-                variant="contained"
-                onClick={onReplace}
-                size="small"
-                disabled={isStreaming || !translation}
-                disableElevation
-                sx={{
-                  minWidth: 64,
-                  height: 36,
+              <Tooltip title="Replace (⌘L)" placement="top" arrow>
+                <span>
+                  <Button
+                    variant="contained"
+                    onClick={onReplace}
+                    size="small"
+                    disabled={isStreaming || !translation}
+                    disableElevation
+                    sx={{
+                      minWidth: 64,
+                      height: 36,
                   fontSize: "0.875rem",
                   fontWeight: 500,
                   textTransform: "none",
@@ -502,6 +527,8 @@ export function TranslationPopup({
               >
                 Replace
               </Button>
+                </span>
+              </Tooltip>
             </Stack>
           </Box>
 
