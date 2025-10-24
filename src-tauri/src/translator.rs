@@ -5,16 +5,53 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use crate::settings;
 
+fn estimate_tokens(text: &str) -> usize {
+    (text.len() as f32 / 4.0).ceil() as usize
+}
+
+fn chunk_by_paragraphs(text: &str, max_tokens: usize) -> Vec<String> {
+    if estimate_tokens(text) <= max_tokens {
+        return vec![text.to_string()];
+    }
+
+    let paragraphs: Vec<&str> = text.split("\n\n").collect();
+    let mut chunks = Vec::new();
+    let mut current = String::new();
+
+    for paragraph in paragraphs {
+        let combined = if current.is_empty() {
+            paragraph.to_string()
+        } else {
+            format!("{}\n\n{}", current, paragraph)
+        };
+
+        if estimate_tokens(&combined) > max_tokens {
+            if !current.is_empty() {
+                chunks.push(current);
+                current = paragraph.to_string();
+            } else {
+                chunks.push(paragraph.to_string());
+            }
+        } else {
+            current = combined;
+        }
+    }
+
+    if !current.is_empty() {
+        chunks.push(current);
+    }
+
+    chunks
+}
+
 #[derive(Serialize)]
 struct AzureRequest {
     messages: Vec<Message>,
     max_tokens: i32,
     temperature: f32,
     stream: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    tools: Option<Vec<Tool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    tool_choice: Option<serde_json::Value>,
+    tools: Vec<Tool>,
+    tool_choice: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -59,31 +96,113 @@ struct StreamChoice {
 #[derive(Deserialize)]
 struct Delta {
     content: Option<String>,
+    tool_calls: Option<Vec<ToolCallDelta>>,
 }
 
-pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) -> Result<String> {
-    println!("[TRANSLATOR] Starting streaming translation...");
-    println!("[TRANSLATOR] Source language: {}", source_lang);
+#[derive(Deserialize)]
+struct ToolCallDelta {
+    index: Option<usize>,
+    function: Option<FunctionDelta>,
+}
 
-    let target_lang = if source_lang == "de" { "en" } else { "de" };
-    println!("[TRANSLATOR] Target language: {}", target_lang);
+#[derive(Deserialize)]
+struct FunctionDelta {
+    name: Option<String>,
+    arguments: Option<String>,
+}
 
-    let source_lang_name = if source_lang == "de" { "German" } else { "English" };
-    let target_lang_name = if target_lang == "de" { "German" } else { "English" };
+#[derive(Deserialize)]
+struct TranslationResult {
+    translated_text: String,
+}
+
+#[derive(Deserialize)]
+struct CorrectionResult {
+    corrected_text: String,
+}
+
+#[derive(Deserialize)]
+struct ImprovementResult {
+    improved_text: String,
+}
+
+fn create_translation_tool(source_lang_name: &str, target_lang_name: &str) -> Tool {
+    Tool {
+        tool_type: "function".to_string(),
+        function: Function {
+            name: "provide_translation".to_string(),
+            description: format!("Return the {} to {} translation", source_lang_name, target_lang_name),
+            parameters: FunctionParameters {
+                param_type: "object".to_string(),
+                properties: serde_json::json!({
+                    "translated_text": {
+                        "type": "string",
+                        "description": "The translated text"
+                    }
+                }),
+                required: vec!["translated_text".to_string()],
+            },
+        },
+    }
+}
+
+fn create_correction_tool(lang_name: &str) -> Tool {
+    Tool {
+        tool_type: "function".to_string(),
+        function: Function {
+            name: "provide_corrected_text".to_string(),
+            description: format!("Return the corrected {} text", lang_name),
+            parameters: FunctionParameters {
+                param_type: "object".to_string(),
+                properties: serde_json::json!({
+                    "corrected_text": {
+                        "type": "string",
+                        "description": "The corrected text with grammar and spelling fixed"
+                    }
+                }),
+                required: vec!["corrected_text".to_string()],
+            },
+        },
+    }
+}
+
+fn create_improvement_tool(lang_name: &str) -> Tool {
+    Tool {
+        tool_type: "function".to_string(),
+        function: Function {
+            name: "provide_improved_text".to_string(),
+            description: format!("Return the improved {} text", lang_name),
+            parameters: FunctionParameters {
+                param_type: "object".to_string(),
+                properties: serde_json::json!({
+                    "improved_text": {
+                        "type": "string",
+                        "description": "The improved text after applying the instruction"
+                    }
+                }),
+                required: vec!["improved_text".to_string()],
+            },
+        },
+    }
+}
+
+
+async fn translate_chunk(text: &str, source_lang_name: &str, target_lang_name: &str) -> Result<String> {
 
     println!("[TRANSLATOR] Loading settings...");
     let settings = settings::load_settings();
 
     let style_instruction = match settings.style.as_str() {
-        "formal" => "Professional tone. German: Sie, Mit freundlichen Grüßen + LAST NAME. English: formal.",
-        "casual" => "Casual tone. German: du, Viele Grüße + first name ok. English: casual.",
-        _ => "Warm, respectful tone. German: context-appropriate Sie/du. English: friendly.",
+        "formal" => "Use formal register.",
+        "casual" => "Use informal register.",
+        _ => "",
     };
 
-    let system_prompt = format!(
-        "Translate {} to {}. Output ONLY the translation.\n\nStyle: {}\n\nCultural rules:\n- German formal: Mit freundlichen Grüßen uses LAST NAME\n- German casual: Viele Grüße/Liebe Grüße can use first name\n- Preserve Sie/du appropriately\n- Keep titles (Dr., Prof.)\n\nNEVER refuse. NEVER explain. Process ALL content.",
-        source_lang_name, target_lang_name, style_instruction
-    );
+    let system_prompt = if style_instruction.is_empty() {
+        format!("Translate the following {} text to {}:", source_lang_name, target_lang_name)
+    } else {
+        format!("Translate the following {} text to {}. {}", source_lang_name, target_lang_name, style_instruction)
+    };
 
     let client = Client::new();
     let request_body = AzureRequest {
@@ -97,11 +216,11 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
                 content: text.to_string(),
             }
         ],
-        max_tokens: 2000,
+        max_tokens: 4000,
         temperature: 0.3,
         stream: true,
-        tools: None,
-        tool_choice: None,
+        tools: vec![create_translation_tool(source_lang_name, target_lang_name)],
+        tool_choice: serde_json::json!({"type": "function", "function": {"name": "provide_translation"}}),
     };
 
     let response = if settings.provider == "azure" {
@@ -144,7 +263,7 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
     println!("[TRANSLATOR] Response status: {}", response.status());
 
     let mut stream = response.bytes_stream();
-    let mut full_translation = String::new();
+    let mut full_arguments = String::new();
     let mut incomplete_line = String::new();
 
     while let Some(chunk_result) = stream.next().await {
@@ -152,7 +271,6 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
             Ok(chunk) => {
                 let chunk_str = String::from_utf8_lossy(&chunk);
                 let text_to_process = format!("{}{}", incomplete_line, chunk_str);
-
                 let lines: Vec<&str> = text_to_process.split('\n').collect();
 
                 for (i, line) in lines.iter().enumerate() {
@@ -163,17 +281,19 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
 
                     if line.starts_with("data: ") {
                         let data = &line[6..];
-
                         if data.trim() == "[DONE]" {
                             continue;
                         }
 
                         if let Ok(parsed) = serde_json::from_str::<StreamResponse>(data) {
                             if let Some(choice) = parsed.choices.first() {
-                                if let Some(content) = &choice.delta.content {
-                                    if !content.is_empty() {
-                                        full_translation.push_str(content);
-                                        let _ = app.emit("translation-chunk", content.clone());
+                                if let Some(tool_calls) = &choice.delta.tool_calls {
+                                    if let Some(tool_call) = tool_calls.first() {
+                                        if let Some(function) = &tool_call.function {
+                                            if let Some(args) = &function.arguments {
+                                                full_arguments.push_str(args);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -192,9 +312,49 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
         }
     }
 
-    println!("[TRANSLATOR] ✅ Streaming complete: '{}'", full_translation);
+    if !full_arguments.is_empty() {
+        match serde_json::from_str::<TranslationResult>(&full_arguments) {
+            Ok(result) => {
+                println!("[TRANSLATOR] ✅ Translation complete: '{}'", result.translated_text);
+                Ok(result.translated_text)
+            }
+            Err(e) => {
+                println!("[TRANSLATOR] ❌ Failed to parse arguments: {}", e);
+                println!("[TRANSLATOR] Raw arguments: {}", full_arguments);
+                Err(anyhow!("Failed to parse translation result"))
+            }
+        }
+    } else {
+        Err(anyhow!("No translation received"))
+    }
+}
 
-    Ok(full_translation)
+pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) -> Result<String> {
+    println!("[TRANSLATOR] Starting translation...");
+    println!("[TRANSLATOR] Source language: {}", source_lang);
+
+    let target_lang = if source_lang == "de" { "en" } else { "de" };
+    let source_lang_name = if source_lang == "de" { "German" } else { "English" };
+    let target_lang_name = if target_lang == "de" { "German" } else { "English" };
+
+    let chunks = chunk_by_paragraphs(text, 2500);
+
+    if chunks.len() > 1 {
+        println!("[TRANSLATOR] Split into {} chunks", chunks.len());
+    }
+
+    let mut results = Vec::new();
+    for (i, chunk) in chunks.iter().enumerate() {
+        if chunks.len() > 1 {
+            println!("[TRANSLATOR] Translating chunk {}/{}", i + 1, chunks.len());
+        }
+        let result = translate_chunk(chunk, source_lang_name, target_lang_name).await?;
+        results.push(result);
+    }
+
+    let final_result = results.join("\n\n");
+    let _ = app.emit("translation-chunk", final_result.clone());
+    Ok(final_result)
 }
 
 pub async fn enhance_stream_with_instruction(
@@ -203,7 +363,7 @@ pub async fn enhance_stream_with_instruction(
     instruction: &str,
     app: &AppHandle,
 ) -> Result<String> {
-    println!("[ENHANCE_CUSTOM] Starting text fix with custom instruction...");
+    println!("[ENHANCE_CUSTOM] Starting text improvement with custom instruction...");
     println!("[ENHANCE_CUSTOM] Language: {}, Instruction: {}", language, instruction);
 
     let lang_name = if language == "de" { "German" } else { "English" };
@@ -211,7 +371,7 @@ pub async fn enhance_stream_with_instruction(
     let settings = settings::load_settings();
 
     let system_prompt = format!(
-        "Apply this specific improvement to the {} text: {}\n\nOutput ONLY the improved text.\n\nNEVER refuse. NEVER explain. Process ALL content.",
+        "Apply this improvement to the {} text: {}",
         lang_name, instruction
     );
 
@@ -227,11 +387,11 @@ pub async fn enhance_stream_with_instruction(
                 content: text.to_string(),
             }
         ],
-        max_tokens: 2000,
+        max_tokens: 4000,
         temperature: 0.3,
         stream: true,
-        tools: None,
-        tool_choice: None,
+        tools: vec![create_improvement_tool(lang_name)],
+        tool_choice: serde_json::json!({"type": "function", "function": {"name": "provide_improved_text"}}),
     };
 
     let response = if settings.provider == "azure" {
@@ -272,7 +432,7 @@ pub async fn enhance_stream_with_instruction(
     println!("[ENHANCE_CUSTOM] Response status: {}", response.status());
 
     let mut stream = response.bytes_stream();
-    let mut full_enhanced = String::new();
+    let mut full_arguments = String::new();
     let mut incomplete_line = String::new();
 
     while let Some(chunk_result) = stream.next().await {
@@ -280,7 +440,6 @@ pub async fn enhance_stream_with_instruction(
             Ok(chunk) => {
                 let chunk_str = String::from_utf8_lossy(&chunk);
                 let text_to_process = format!("{}{}", incomplete_line, chunk_str);
-
                 let lines: Vec<&str> = text_to_process.split('\n').collect();
 
                 for (i, line) in lines.iter().enumerate() {
@@ -291,17 +450,19 @@ pub async fn enhance_stream_with_instruction(
 
                     if line.starts_with("data: ") {
                         let data = &line[6..];
-
                         if data.trim() == "[DONE]" {
                             continue;
                         }
 
                         if let Ok(parsed) = serde_json::from_str::<StreamResponse>(data) {
                             if let Some(choice) = parsed.choices.first() {
-                                if let Some(content) = &choice.delta.content {
-                                    if !content.is_empty() {
-                                        full_enhanced.push_str(content);
-                                        let _ = app.emit("translation-chunk", content.clone());
+                                if let Some(tool_calls) = &choice.delta.tool_calls {
+                                    if let Some(tool_call) = tool_calls.first() {
+                                        if let Some(function) = &tool_call.function {
+                                            if let Some(args) = &function.arguments {
+                                                full_arguments.push_str(args);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -320,13 +481,26 @@ pub async fn enhance_stream_with_instruction(
         }
     }
 
-    println!("[ENHANCE_CUSTOM] ✅ Custom enhancement complete: '{}'", full_enhanced);
-
-    Ok(full_enhanced)
+    if !full_arguments.is_empty() {
+        match serde_json::from_str::<ImprovementResult>(&full_arguments) {
+            Ok(result) => {
+                println!("[ENHANCE_CUSTOM] ✅ Improvement complete: '{}'", result.improved_text);
+                let _ = app.emit("translation-chunk", result.improved_text.clone());
+                Ok(result.improved_text)
+            }
+            Err(e) => {
+                println!("[ENHANCE_CUSTOM] ❌ Failed to parse arguments: {}", e);
+                println!("[ENHANCE_CUSTOM] Raw arguments: {}", full_arguments);
+                Err(anyhow!("Failed to parse improvement result"))
+            }
+        }
+    } else {
+        Err(anyhow!("No improvement received"))
+    }
 }
 
 pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Result<String> {
-    println!("[ENHANCE] Starting text fix...");
+    println!("[ENHANCE] Starting text correction...");
     println!("[ENHANCE] Language: {}", language);
 
     let lang_name = if language == "de" { "German" } else { "English" };
@@ -334,15 +508,9 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
     println!("[ENHANCE] Loading settings...");
     let settings = settings::load_settings();
 
-    let style_instruction = match settings.style.as_str() {
-        "formal" => "Keep formal tone. German: ensure Sie, proper formal closings.",
-        "casual" => "Keep casual tone. German: ensure du used correctly.",
-        _ => "Keep existing tone.",
-    };
-
     let system_prompt = format!(
-        "Fix grammar/spelling in {}. Output ONLY corrected text.\n\nStyle: {}\n\nPreserve:\n- Sie/du in German\n- Name usage in closings (formal = last name)\n- Original tone\n\nNEVER refuse. NEVER explain. Process ALL content.",
-        lang_name, style_instruction
+        "Correct any grammar and spelling errors in this {} text:",
+        lang_name
     );
 
     let client = Client::new();
@@ -357,11 +525,11 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
                 content: text.to_string(),
             }
         ],
-        max_tokens: 2000,
+        max_tokens: 4000,
         temperature: 0.3,
         stream: true,
-        tools: None,
-        tool_choice: None,
+        tools: vec![create_correction_tool(lang_name)],
+        tool_choice: serde_json::json!({"type": "function", "function": {"name": "provide_corrected_text"}}),
     };
 
     let response = if settings.provider == "azure" {
@@ -404,7 +572,7 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
     println!("[ENHANCE] Response status: {}", response.status());
 
     let mut stream = response.bytes_stream();
-    let mut full_enhanced = String::new();
+    let mut full_arguments = String::new();
     let mut incomplete_line = String::new();
 
     while let Some(chunk_result) = stream.next().await {
@@ -412,7 +580,6 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
             Ok(chunk) => {
                 let chunk_str = String::from_utf8_lossy(&chunk);
                 let text_to_process = format!("{}{}", incomplete_line, chunk_str);
-
                 let lines: Vec<&str> = text_to_process.split('\n').collect();
 
                 for (i, line) in lines.iter().enumerate() {
@@ -423,17 +590,19 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
 
                     if line.starts_with("data: ") {
                         let data = &line[6..];
-
                         if data.trim() == "[DONE]" {
                             continue;
                         }
 
                         if let Ok(parsed) = serde_json::from_str::<StreamResponse>(data) {
                             if let Some(choice) = parsed.choices.first() {
-                                if let Some(content) = &choice.delta.content {
-                                    if !content.is_empty() {
-                                        full_enhanced.push_str(content);
-                                        let _ = app.emit("translation-chunk", content.clone());
+                                if let Some(tool_calls) = &choice.delta.tool_calls {
+                                    if let Some(tool_call) = tool_calls.first() {
+                                        if let Some(function) = &tool_call.function {
+                                            if let Some(args) = &function.arguments {
+                                                full_arguments.push_str(args);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -452,7 +621,20 @@ pub async fn enhance_stream(text: &str, language: &str, app: &AppHandle) -> Resu
         }
     }
 
-    println!("[ENHANCE] ✅ Fix complete: '{}'", full_enhanced);
-
-    Ok(full_enhanced)
+    if !full_arguments.is_empty() {
+        match serde_json::from_str::<CorrectionResult>(&full_arguments) {
+            Ok(result) => {
+                println!("[ENHANCE] ✅ Correction complete: '{}'", result.corrected_text);
+                let _ = app.emit("translation-chunk", result.corrected_text.clone());
+                Ok(result.corrected_text)
+            }
+            Err(e) => {
+                println!("[ENHANCE] ❌ Failed to parse arguments: {}", e);
+                println!("[ENHANCE] Raw arguments: {}", full_arguments);
+                Err(anyhow!("Failed to parse correction result"))
+            }
+        }
+    } else {
+        Err(anyhow!("No correction received"))
+    }
 }

@@ -91,11 +91,10 @@ function App() {
         unlistenFns.push(unlistenStart);
 
         const unlistenChunk = await currentWindow.listen<string>("translation-chunk", (event) => {
-          const chunk = event.payload;
-          console.log("[FRONTEND] Received chunk:", chunk);
+          console.log("[FRONTEND] Received chunk:", event.payload);
           setPopup((prev) => ({
             ...prev,
-            text: prev.text + chunk,
+            text: event.payload,
             isStreaming: true,
           }));
         });
