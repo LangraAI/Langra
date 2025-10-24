@@ -40,7 +40,7 @@ pub fn get_translator_window(to_mouse_position: bool) -> tauri::WebviewWindow {
             .focused(false)
             .decorations(true)
             .transparent(false)
-            .always_on_top(true)
+            .always_on_top(false)
             .center();
 
             let window = build_window(builder);
@@ -101,6 +101,15 @@ pub async fn hide_translator_window() {
                 window.hide().unwrap();
             }
             None => {}
+        }
+    }
+}
+
+#[tauri::command]
+pub fn set_always_on_top(on_top: bool) {
+    if let Some(handle) = APP_HANDLE.get() {
+        if let Some(window) = handle.get_webview_window(TRANSLATOR_WIN_NAME) {
+            let _ = window.set_always_on_top(on_top);
         }
     }
 }

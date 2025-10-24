@@ -54,6 +54,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    invoke("set_always_on_top", { onTop: showWelcome });
+  }, [showWelcome]);
+
+  useEffect(() => {
     console.log("[FRONTEND] App mounted, setting up event listeners...");
     const unlistenFns: (() => void)[] = [];
 

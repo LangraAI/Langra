@@ -340,6 +340,7 @@ pub fn run() {
             get_mode,
             insertion::insert_translation_into_previous_input,
             windows::hide_translator_window,
+            windows::set_always_on_top,
             settings::get_settings,
             settings::save_settings,
             settings::test_api_credentials,
