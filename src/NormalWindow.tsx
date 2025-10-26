@@ -12,6 +12,7 @@ export function NormalWindow() {
   const [sourceText, setSourceText] = useState("");
   const [resultText, setResultText] = useState("");
   const [detectedLang, setDetectedLang] = useState<string>("en");
+  const [isManualLangSelection, setIsManualLangSelection] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -22,17 +23,22 @@ export function NormalWindow() {
     setResultText("");
 
     try {
-      // Auto-detect the language
-      console.log("[NORMAL_WINDOW] Auto-detecting language...");
       let langToUse = detectedLang;
-      try {
-        const detected = await invoke<string>("detect_language", { text: sourceText });
-        console.log("[NORMAL_WINDOW] Detected language:", detected);
-        setDetectedLang(detected);
-        langToUse = detected;
-      } catch (error) {
-        console.error("[NORMAL_WINDOW] Language detection failed:", error);
-        langToUse = "en"; // fallback to English
+
+      // Only auto-detect if language wasn't manually selected
+      if (!isManualLangSelection) {
+        console.log("[NORMAL_WINDOW] Auto-detecting language...");
+        try {
+          const detected = await invoke<string>("detect_language", { text: sourceText });
+          console.log("[NORMAL_WINDOW] Detected language:", detected);
+          setDetectedLang(detected);
+          langToUse = detected;
+        } catch (error) {
+          console.error("[NORMAL_WINDOW] Language detection failed:", error);
+          langToUse = "en"; // fallback to English
+        }
+      } else {
+        console.log("[NORMAL_WINDOW] Using manually selected language:", langToUse);
       }
 
       if (mode === "translate") {
@@ -51,12 +57,14 @@ export function NormalWindow() {
       setResultText("Processing failed. Please try again.");
       setIsProcessing(false);
     }
-  }, [sourceText, mode, detectedLang]);
+  }, [sourceText, mode, detectedLang, isManualLangSelection]);
 
   // Debounced auto-processing
   useEffect(() => {
     if (!sourceText.trim()) {
       setResultText("");
+      // Reset to auto-detect when text is cleared
+      setIsManualLangSelection(false);
       return;
     }
 
@@ -112,6 +120,7 @@ export function NormalWindow() {
   const handleLanguageSwitch = () => {
     const newLang = detectedLang === "de" ? "en" : "de";
     setDetectedLang(newLang);
+    setIsManualLangSelection(true); // Mark as manual selection
     setResultText("");
 
     // Only trigger translation if there's text to translate
