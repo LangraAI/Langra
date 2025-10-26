@@ -6,6 +6,7 @@ import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import KeyIcon from "@mui/icons-material/Key";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { SettingsDialog } from "./SettingsDialog";
 import { invoke } from "@tauri-apps/api/core";
 import { StreamingText } from "./StreamingText";
@@ -23,6 +24,7 @@ interface PopupProps {
   onLanguageSwitch: () => void;
   onModeChange: (mode: "translate" | "enhance") => void;
   onClearAndStream: () => void;
+  onExpandToNormal: () => void;
 }
 
 export function TranslationPopup({
@@ -38,6 +40,7 @@ export function TranslationPopup({
   onLanguageSwitch,
   onModeChange,
   onClearAndStream,
+  onExpandToNormal,
 }: PopupProps) {
   const enhanceInputRef = useRef<HTMLInputElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -536,6 +539,23 @@ export function TranslationPopup({
                   </IconButton>
                 </Tooltip>
               )}
+
+              <Tooltip title="Expand to Edit Mode" placement="top" arrow>
+                <IconButton
+                  size="small"
+                  onClick={onExpandToNormal}
+                  sx={{
+                    color: "#b3b3b3",
+                    padding: "6px",
+                    "&:hover": {
+                      backgroundColor: "#333333",
+                      color: "#64b5f6",
+                    },
+                  }}
+                >
+                  <OpenInFullIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
 
               <Tooltip title="Copy (⌘K)" placement="top" arrow>
                 <span>

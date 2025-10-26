@@ -4,6 +4,8 @@ mod windows;
 mod insertion;
 mod keyboard_monitor;
 mod settings;
+mod tray;
+mod resize;
 
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -655,6 +657,10 @@ pub fn run() {
             window.hide().unwrap();
             println!("[SETUP] Translator window created and hidden");
 
+            if let Err(e) = tray::create_tray(app.handle()) {
+                println!("[SETUP] Failed to create tray: {}", e);
+            }
+
             keyboard_monitor::start_listener(handle);
             Ok(())
         })
@@ -685,6 +691,8 @@ pub fn run() {
             login_and_get_token,
             signup_and_get_token,
             oauth_login,
+            resize::resize_window_to_normal,
+            resize::resize_window_to_popup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

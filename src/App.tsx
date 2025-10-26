@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { invoke } from "@tauri-apps/api/core";
 import { TranslationPopup } from "./TranslationPopup";
+import { NormalWindow } from "./NormalWindow";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { SuccessScreen } from "./SuccessScreen";
 import { SettingsDialog } from "./SettingsDialog";
 import { PermissionModal } from "./PermissionModal";
 
 function App() {
+  const [viewMode, setViewMode] = useState<"popup" | "normal">("normal");
   const [popup, setPopup] = useState({
     isOpen: false,
     text: "",
@@ -97,8 +99,10 @@ function App() {
       try {
         const currentWindow = getCurrentWebviewWindow();
 
-        const unlistenStart = await currentWindow.listen<{detected_language: string, original_text: string}>("translation-start", (event) => {
+        const unlistenStart = await currentWindow.listen<{detected_language: string, original_text: string}>("translation-start", async (event) => {
           console.log("[FRONTEND] Translation started - opening popup");
+          await invoke("resize_window_to_popup");
+          setViewMode("popup");
           setPopup({
             isOpen: true,
             text: "",
@@ -299,19 +303,40 @@ function App() {
     setShowSuccess(true);
   };
 
+  const handleExpandToNormal = async () => {
+    console.log("[APP] Expanding to normal mode");
+    await invoke("resize_window_to_normal");
+    setViewMode("normal");
+    setPopup((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  useEffect(() => {
+    const currentWindow = getCurrentWebviewWindow();
+
+    const setupViewModeListener = async () => {
+      const unlisten = await currentWindow.listen<string>("switch-to-normal", async () => {
+        console.log("[FRONTEND] Switching to normal view");
+        await invoke("resize_window_to_normal");
+        setViewMode("normal");
+        setPopup({ isOpen: false, text: "", isStreaming: false, detectedLanguage: "en", originalText: "", progress: 0 });
+      });
+      return unlisten;
+    };
+
+    setupViewModeListener();
+  }, []);
+
   return (
     <div className="w-full h-screen" style={{ background: "#1a1a1a" }}>
-      {showPermissionModal && (
+      {showPermissionModal ? (
         <PermissionModal />
-      )}
-
-      {showSuccess ? (
+      ) : showSuccess ? (
         <SuccessScreen onClose={handleSuccessClose} />
       ) : showWelcome ? (
         <WelcomeScreen
           onLoginSuccess={handleLoginSuccess}
         />
-      ) : (
+      ) : viewMode === "popup" && popup.isOpen ? (
         <TranslationPopup
           translation={popup.text}
           isOpen={popup.isOpen}
@@ -325,7 +350,10 @@ function App() {
           onLanguageSwitch={handleLanguageSwitch}
           onModeChange={handleModeChange}
           onClearAndStream={handleClearAndStream}
+          onExpandToNormal={handleExpandToNormal}
         />
+      ) : (
+        <NormalWindow />
       )}
 
       <SettingsDialog open={settingsOpen} onClose={handleCloseSettings} />
