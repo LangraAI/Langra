@@ -51,6 +51,20 @@ export function TranslationPopup({
   }, [translation, isStreaming]);
 
   useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const token = await invoke<string>("get_access_token");
+        setIsLoggedIn(!!token);
+        console.log("[POPUP] User is logged in:", !!token);
+      } catch (err) {
+        setIsLoggedIn(false);
+        console.log("[POPUP] User is not logged in");
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
+  useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -286,10 +300,17 @@ export function TranslationPopup({
                 }}
               >
                 <MenuItem
-                  onClick={() => {
+                  onClick={async () => {
                     setMenuAnchorEl(null);
                     if (isLoggedIn) {
-                      setIsLoggedIn(false);
+                      try {
+                        await invoke("logout");
+                        setIsLoggedIn(false);
+                        console.log("[POPUP] Logged out successfully");
+                        window.location.reload();
+                      } catch (error) {
+                        console.error("[POPUP] Logout failed:", error);
+                      }
                     } else {
                       window.open("https://langra.app/auth", "_blank");
                     }

@@ -184,6 +184,29 @@ fn get_access_token() -> Result<String, String> {
 }
 
 #[tauri::command]
+fn logout() -> Result<(), String> {
+    use std::fs;
+
+    println!("[AUTH] Logging out...");
+
+    let app_dir = dirs::data_dir()
+        .ok_or("Failed to get app data directory")?
+        .join("langra");
+
+    let token_path = app_dir.join("access_token");
+
+    if token_path.exists() {
+        fs::remove_file(&token_path)
+            .map_err(|e| format!("Failed to delete access token: {}", e))?;
+        println!("[AUTH] Access token deleted successfully");
+    } else {
+        println!("[AUTH] No access token found to delete");
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn login_and_get_token(email: String, password: String) -> Result<serde_json::Value, String> {
     println!("[AUTH] Logging in with email: {}", email);
 
@@ -655,11 +678,11 @@ pub fn run() {
             windows::set_always_on_top,
             settings::get_settings,
             settings::save_settings,
-            settings::test_api_credentials,
             enhance_text_with_instruction,
             verify_access_token,
             save_access_token,
             get_access_token,
+            logout,
             login_and_get_token,
             signup_and_get_token,
             oauth_login,

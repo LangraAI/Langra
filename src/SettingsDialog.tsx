@@ -25,7 +25,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     azure_deployment: "gpt-4o-mini",
     style: "friendly",
   });
-  const [saveStatus, setSaveStatus] = useState<"idle" | "testing" | "saving" | "success" | "error">("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [hasCredentials, setHasCredentials] = useState(false);
 
@@ -51,23 +51,18 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   };
 
   const handleSave = async () => {
-    console.log("[SETTINGS] Testing and saving settings:", settings);
-    setSaveStatus("testing");
+    console.log("[SETTINGS] Saving settings:", settings);
+    setSaveStatus("saving");
     setErrorMessage("");
 
     try {
-      console.log("[SETTINGS] Testing credentials...");
-      const testResult = await invoke<string>("test_api_credentials", { settings });
-      console.log("[SETTINGS] Credentials valid:", testResult);
-
-      setSaveStatus("saving");
       await invoke("save_settings", { settings });
-      console.log("[SETTINGS] Save successful!");
+      console.log("[SETTINGS] Save successful! Credentials sent to backend.");
 
       setSaveStatus("idle");
       onClose(true);
     } catch (error) {
-      console.error("[SETTINGS] Validation or save failed:", error);
+      console.error("[SETTINGS] Save failed:", error);
       setSaveStatus("error");
       setErrorMessage(String(error));
     }
@@ -401,7 +396,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             onClick={handleSave}
             variant="contained"
             size="small"
-            disabled={saveStatus === "testing" || saveStatus === "saving"}
+            disabled={saveStatus === "saving"}
             disableElevation
             sx={{
               backgroundColor: "#64b5f6",
@@ -414,7 +409,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               "&:hover": { backgroundColor: "#42a5f5" }
             }}
           >
-            {saveStatus === "testing" ? "Testing..." : saveStatus === "saving" ? "Saving..." : "Save"}
+            {saveStatus === "saving" ? "Saving..." : "Save"}
           </Button>
         )}
       </DialogActions>
