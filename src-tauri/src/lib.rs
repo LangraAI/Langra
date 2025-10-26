@@ -91,6 +91,30 @@ fn open_input_monitoring_settings() {
 }
 
 #[tauri::command]
+fn restart_app() {
+    use std::process::Command;
+
+    println!("[APP] Restarting application...");
+
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(current_exe) = std::env::current_exe() {
+            let _ = Command::new("open")
+                .arg("-n")
+                .arg(current_exe)
+                .spawn();
+
+            std::process::exit(0);
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        std::process::exit(0);
+    }
+}
+
+#[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
     use std::process::Command;
 
@@ -639,6 +663,7 @@ pub fn run() {
             check_input_monitoring_permission,
             request_input_monitoring_permission,
             open_input_monitoring_settings,
+            restart_app,
             open_url,
             show_translator_with_selected_text,
             retranslate,

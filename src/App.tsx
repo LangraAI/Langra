@@ -299,25 +299,10 @@ function App() {
     setShowSuccess(true);
   };
 
-  const handlePermissionGranted = async () => {
-    console.log("[FRONTEND] Input Monitoring permission granted!");
-    setShowPermissionModal(false);
-
-    // Now check if user is logged in
-    try {
-      await invoke<string>("get_access_token");
-      console.log("[FRONTEND] User is logged in, app ready");
-      await invoke("hide_translator_window");
-    } catch (err) {
-      console.log("[FRONTEND] No access token found, showing welcome screen");
-      setShowWelcome(true);
-    }
-  };
-
   return (
     <div className="w-full h-screen" style={{ background: "#1a1a1a" }}>
       {showPermissionModal && (
-        <PermissionModal onPermissionGranted={handlePermissionGranted} />
+        <PermissionModal />
       )}
 
       {showSuccess ? (

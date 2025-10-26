@@ -32,8 +32,8 @@ pub fn get_translator_window(to_mouse_position: bool) -> tauri::WebviewWindow {
                 tauri::WebviewUrl::App("index.html".into()),
             )
             .title("Langra")
-            .inner_size(600.0, 500.0)
-            .min_inner_size(500.0, 400.0)
+            .inner_size(700.0, 600.0)
+            .min_inner_size(600.0, 500.0)
             .resizable(true)
             .skip_taskbar(false)
             .visible(false)

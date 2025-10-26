@@ -2,11 +2,7 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./PermissionModal.css";
 
-interface PermissionModalProps {
-  onPermissionGranted: () => void;
-}
-
-export function PermissionModal({ onPermissionGranted }: PermissionModalProps) {
+export function PermissionModal() {
   const [step, setStep] = useState<"intro" | "waiting" | "success">("intro");
   const [isChecking, setIsChecking] = useState(false);
 
@@ -19,9 +15,6 @@ export function PermissionModal({ onPermissionGranted }: PermissionModalProps) {
           if (granted) {
             console.log("[PERMISSIONS] Permission granted!");
             setStep("success");
-            setTimeout(() => {
-              onPermissionGranted();
-            }, 1500);
           }
         } catch (error) {
           console.error("[PERMISSIONS] Error checking permission:", error);
@@ -30,7 +23,7 @@ export function PermissionModal({ onPermissionGranted }: PermissionModalProps) {
 
       return () => clearInterval(interval);
     }
-  }, [step, onPermissionGranted]);
+  }, [step]);
 
   const handleGrantPermission = async () => {
     try {
@@ -87,14 +80,12 @@ export function PermissionModal({ onPermissionGranted }: PermissionModalProps) {
 
             <div className="permission-info-box">
               <div className="info-item">
-                <div className="info-icon">🔒</div>
                 <div className="info-text">
                   <div className="info-title">Privacy First</div>
                   <div className="info-subtitle">We only monitor keyboard shortcuts, nothing else</div>
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-icon">⚡</div>
                 <div className="info-text">
                   <div className="info-title">Fast & Local</div>
                   <div className="info-subtitle">All processing happens on your device</div>
@@ -146,7 +137,7 @@ export function PermissionModal({ onPermissionGranted }: PermissionModalProps) {
               </div>
               <div className="step-item">
                 <div className="step-number">3</div>
-                <div className="step-text">Come back here - we'll continue automatically!</div>
+                <div className="step-text">Return to this window - we'll detect it automatically</div>
               </div>
             </div>
 
@@ -176,7 +167,26 @@ export function PermissionModal({ onPermissionGranted }: PermissionModalProps) {
             <h2 className="permission-title">Permission Granted!</h2>
 
             <p className="permission-description">
-              Langra is now ready to use. Press <kbd>⌘ Cmd+C</kbd> twice to translate any text.
+              Please restart Langra for the permission to take effect.
+            </p>
+
+            <button
+              className="permission-button-primary"
+              onClick={async () => {
+                try {
+                  await invoke("restart_app");
+                } catch (error) {
+                  console.error("[PERMISSIONS] Failed to restart:", error);
+                  // Fallback to reload
+                  window.location.reload();
+                }
+              }}
+            >
+              Restart Now
+            </button>
+
+            <p className="permission-footer">
+              You can also restart manually by quitting and reopening the app
             </p>
           </>
         )}
