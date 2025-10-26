@@ -1,14 +1,19 @@
+import { useState } from "react";
 import { Box, Typography, Button, Stack } from "@mui/material";
 import KeyIcon from "@mui/icons-material/Key";
 import LoginIcon from "@mui/icons-material/Login";
+import { LoginDialog } from "./LoginDialog";
 
 interface WelcomeScreenProps {
   onOpenSettings: () => void;
+  onLoginSuccess?: () => void;
 }
 
-export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
-  const handleLoginRegister = () => {
-    window.open("https://langra.app/auth", "_blank");
+export function WelcomeScreen({ onOpenSettings, onLoginSuccess }: WelcomeScreenProps) {
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+
+  const handleLoginClick = () => {
+    setLoginDialogOpen(true);
   };
 
   return (
@@ -76,7 +81,7 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
             variant="contained"
             fullWidth
             startIcon={<LoginIcon />}
-            onClick={handleLoginRegister}
+            onClick={handleLoginClick}
             disableElevation
             sx={{
               backgroundColor: "#64b5f6",
@@ -91,7 +96,7 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
               },
             }}
           >
-            Login/Register
+            Use Langra Account
           </Button>
 
           <Button
@@ -129,6 +134,15 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
           Your API keys are stored locally and never shared
         </Typography>
       </Box>
+
+      <LoginDialog
+        open={loginDialogOpen}
+        onClose={() => setLoginDialogOpen(false)}
+        onLoginSuccess={() => {
+          setLoginDialogOpen(false);
+          onLoginSuccess?.();
+        }}
+      />
     </Box>
   );
 }

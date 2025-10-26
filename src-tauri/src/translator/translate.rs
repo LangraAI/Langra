@@ -1,65 +1,56 @@
 use anyhow::Result;
 use tauri::{AppHandle, Emitter};
-use crate::settings;
-use super::chunking::chunk_by_paragraphs;
-use super::client::call_openai;
-use super::types::{create_translation_tool, TranslationResult};
-
-async fn translate_chunk(text: &str, source_lang_name: &str, target_lang_name: &str, app: &AppHandle) -> Result<String> {
-    let settings = settings::load_settings();
-
-    let style_instruction = match settings.style.as_str() {
-        "formal" => "Use formal register.",
-        "casual" => "Use informal register.",
-        _ => "",
-    };
-
-    let system_prompt = if style_instruction.is_empty() {
-        format!("Translate the following {} text to {}:", source_lang_name, target_lang_name)
-    } else {
-        format!("Translate the following {} text to {}. {}", source_lang_name, target_lang_name, style_instruction)
-    };
-
-    let tool = create_translation_tool(source_lang_name, target_lang_name);
-    let result: TranslationResult = call_openai(system_prompt, text.to_string(), tool, "provide_translation", app).await?;
-
-    Ok(result.translated_text)
-}
+use crate::get_access_token;
 
 pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) -> Result<String> {
     println!("[TRANSLATOR] Starting translation...");
     println!("[TRANSLATOR] Source language: {}", source_lang);
 
+    let token = get_access_token().map_err(|e| anyhow::anyhow!(e))?;
     let target_lang = if source_lang == "de" { "en" } else { "de" };
-    let source_lang_name = if source_lang == "de" { "German" } else { "English" };
-    let target_lang_name = if target_lang == "de" { "German" } else { "English" };
 
-    let chunks = chunk_by_paragraphs(text, 2500);
-    let total_chunks = chunks.len();
+    println!("[TRANSLATOR] Using backend API");
 
-    if chunks.len() > 1 {
-        println!("[TRANSLATOR] Split into {} chunks", chunks.len());
+    let client = reqwest::Client::new();
+    let response = client
+        .post("http://localhost:3000/api/translate")
+        .header("Authorization", format!("Bearer {}", token))
+        .json(&serde_json::json!({
+            "text": text,
+            "source_lang": source_lang,
+            "target_lang": target_lang,
+        }))
+        .send()
+        .await?;
+
+    if !response.status().is_success() {
+        let error_text = response.text().await?;
+        anyhow::bail!("Backend API error: {}", error_text);
     }
 
-    let mut results = Vec::new();
-    for (i, chunk) in chunks.iter().enumerate() {
-        if chunks.len() > 1 {
-            println!("[TRANSLATOR] Translating chunk {}/{}", i + 1, chunks.len());
+    let mut result = String::new();
+    let mut stream = response.bytes_stream();
+
+    use futures_util::StreamExt;
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        let chunk_str = String::from_utf8_lossy(&chunk);
+
+        for line in chunk_str.lines() {
+            if line.starts_with("data: ") {
+                let data = &line[6..];
+                if data == "[DONE]" {
+                    break;
+                }
+                if let Ok(json) = serde_json::from_str::<serde_json::Value>(data) {
+                    if let Some(content) = json["content"].as_str() {
+                        result = content.to_string();
+                        let _ = app.emit("translation-partial", result.clone());
+                    }
+                }
+            }
         }
-
-        let progress = ((i as f32 / total_chunks as f32) * 100.0) as i32;
-        let _ = app.emit("translation-progress", progress);
-
-        let result = translate_chunk(chunk, source_lang_name, target_lang_name, app).await?;
-        results.push(result.clone());
-
-        let accumulated = results.join("\n\n");
-        let _ = app.emit("translation-chunk", accumulated);
-
-        let progress_after = (((i + 1) as f32 / total_chunks as f32) * 100.0) as i32;
-        let _ = app.emit("translation-progress", progress_after);
     }
 
-    let final_result = results.join("\n\n");
-    Ok(final_result)
+    Ok(result)
 }

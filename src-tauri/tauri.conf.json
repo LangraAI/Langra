@@ -30,5 +30,10 @@
       "minimumSystemVersion": "10.15",
       "entitlements": "Info.plist"
     }
+  },
+  "plugins": {
+    "deepLink": {
+      "schemes": ["langra"]
+    }
   }
 }

@@ -90,8 +90,47 @@ pub fn get_settings() -> Settings {
 }
 
 #[tauri::command]
-pub fn save_settings(settings: Settings) -> Result<(), String> {
-    save_settings_to_disk(&settings)
+pub async fn save_settings(settings: Settings) -> Result<(), String> {
+    save_settings_to_disk(&settings)?;
+
+    if settings.provider == "azure"
+        && !settings.azure_endpoint.is_empty()
+        && !settings.azure_api_key.is_empty()
+        && !settings.azure_deployment.is_empty()
+    {
+        if let Ok(token) = crate::get_access_token() {
+            println!("[SETTINGS] Sending Azure credentials to backend");
+
+            let client = reqwest::Client::new();
+            let response = client
+                .post("http://localhost:3000/api/credentials")
+                .header("Authorization", format!("Bearer {}", token))
+                .json(&serde_json::json!({
+                    "azure_endpoint": settings.azure_endpoint,
+                    "azure_api_key": settings.azure_api_key,
+                    "azure_deployment": settings.azure_deployment,
+                }))
+                .send()
+                .await;
+
+            match response {
+                Ok(resp) => {
+                    if resp.status().is_success() {
+                        println!("[SETTINGS] ✅ Credentials saved to backend");
+                    } else {
+                        println!("[SETTINGS] ⚠️ Failed to save credentials to backend: {}", resp.status());
+                    }
+                }
+                Err(e) => {
+                    println!("[SETTINGS] ⚠️ Failed to send credentials to backend: {}", e);
+                }
+            }
+        } else {
+            println!("[SETTINGS] No access token found, credentials stored locally only");
+        }
+    }
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -166,7 +205,7 @@ pub async fn test_api_credentials(settings: Settings) -> Result<String, String> 
         let url = "https://api.openai.com/v1/chat/completions";
 
         let test_body = serde_json::json!({
-            "model": "gpt-4o-mini",
+            "model": "gpt-4",
             "messages": [{"role": "user", "content": "test"}],
             "max_tokens": 5,
             "stream": false

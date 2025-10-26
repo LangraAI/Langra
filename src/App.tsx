@@ -39,13 +39,24 @@ function App() {
         const settings: any = await invoke("get_settings");
         console.log("[FRONTEND] Checking credentials on startup...");
 
-        const hasCredentials = settings.provider === "azure"
+        const hasApiKey = settings.provider === "azure"
           ? settings.azure_endpoint && settings.azure_api_key
           : settings.openai_api_key;
 
-        if (!hasCredentials) {
+        let hasAccessToken = false;
+        try {
+          const accessToken = await invoke<string>("get_access_token");
+          hasAccessToken = !!accessToken;
+          console.log("[FRONTEND] Access token found:", !!accessToken);
+        } catch (err) {
+          console.log("[FRONTEND] No access token found");
+        }
+
+        if (!hasApiKey && !hasAccessToken) {
           console.log("[FRONTEND] No credentials found, showing welcome screen");
           setShowWelcome(true);
+        } else {
+          console.log("[FRONTEND] Credentials found, app ready");
         }
       } catch (error) {
         console.error("[FRONTEND] Failed to check credentials:", error);
@@ -118,6 +129,19 @@ function App() {
         });
         unlistenFns.push(unlistenPartial);
 
+        const unlistenEnhancementPartial = await currentWindow.listen<string>("enhancement-partial", (event) => {
+          console.log("[FRONTEND] Received enhancement partial text:", event.payload.substring(0, 50) + "...");
+          setPopup((prev) => {
+            console.log("[FRONTEND] Updating popup state with enhancement partial text");
+            return {
+              ...prev,
+              text: event.payload,
+              isStreaming: true,
+            };
+          });
+        });
+        unlistenFns.push(unlistenEnhancementPartial);
+
         const unlistenChunk = await currentWindow.listen<string>("translation-chunk", (event) => {
           console.log("[FRONTEND] Received chunk");
           setPopup((prev) => ({
@@ -153,6 +177,13 @@ function App() {
           });
         });
         unlistenFns.push(unlistenCredentialsMissing);
+
+        const unlistenAuthSuccess = await currentWindow.listen("auth-success", () => {
+          console.log("[FRONTEND] Authentication successful, hiding welcome screen");
+          setShowWelcome(false);
+          setShowSuccess(true);
+        });
+        unlistenFns.push(unlistenAuthSuccess);
 
         console.log("[FRONTEND] All event listeners registered");
       } catch (error) {
@@ -250,8 +281,25 @@ function App() {
     }
   };
 
-  const handleSuccessClose = () => {
+  const handleSuccessClose = async () => {
     setShowSuccess(false);
+
+    try {
+      const accessToken = await invoke<string>("get_access_token");
+      if (accessToken) {
+        console.log("[FRONTEND] Access token verified, staying logged in");
+        await invoke("hide_translator_window");
+      }
+    } catch (err) {
+      console.log("[FRONTEND] No access token found after success, showing welcome");
+      setShowWelcome(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    console.log("[FRONTEND] Login successful, hiding welcome screen");
+    setShowWelcome(false);
+    setShowSuccess(true);
   };
 
   return (
@@ -259,7 +307,10 @@ function App() {
       {showSuccess ? (
         <SuccessScreen onClose={handleSuccessClose} />
       ) : showWelcome ? (
-        <WelcomeScreen onOpenSettings={handleOpenSettings} />
+        <WelcomeScreen
+          onOpenSettings={handleOpenSettings}
+          onLoginSuccess={handleLoginSuccess}
+        />
       ) : (
         <TranslationPopup
           translation={popup.text}
