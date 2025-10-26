@@ -43,6 +43,11 @@ function App() {
 
         if (!hasPermission) {
           console.log("[FRONTEND] No Input Monitoring permission, showing permission modal");
+          // Show the window first
+          await invoke("show_window");
+          // Set it on top
+          await invoke("set_always_on_top", { onTop: true });
+          // Then show the modal
           setShowPermissionModal(true);
           return false;
         }
@@ -81,8 +86,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    invoke("set_always_on_top", { onTop: showWelcome });
-  }, [showWelcome]);
+    invoke("set_always_on_top", { onTop: showWelcome || showPermissionModal });
+  }, [showWelcome, showPermissionModal]);
 
   useEffect(() => {
     console.log("[FRONTEND] App mounted, setting up event listeners...");

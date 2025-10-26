@@ -114,6 +114,12 @@ pub fn set_always_on_top(on_top: bool) {
     }
 }
 
+#[tauri::command]
+pub fn show_window() {
+    println!("[WINDOW] show_window command called");
+    show_translator_window(false);
+}
+
 fn build_window<'a, R: tauri::Runtime, M: tauri::Manager<R>>(
     builder: tauri::WebviewWindowBuilder<'a, R, M>,
 ) -> tauri::WebviewWindow<R> {

@@ -648,6 +648,7 @@ pub fn run() {
             insertion::insert_translation_into_previous_input,
             windows::hide_translator_window,
             windows::set_always_on_top,
+            windows::show_window,
             settings::get_settings,
             settings::save_settings,
             settings::save_api_keys,
