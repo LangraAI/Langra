@@ -174,13 +174,13 @@ export function NormalWindow() {
         sx={{
           flex: 1,
           overflow: "auto",
-          padding: "32px",
+          padding: "20px",
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
+          gap: "12px",
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", justifyContent: "center", gap: "12px", alignItems: "center" }}>
           <ToggleButtonGroup
             value={mode}
             exclusive
@@ -190,26 +190,28 @@ export function NormalWindow() {
                 setResultText("");
               }
             }}
-            size="medium"
+            size="small"
             sx={{
+              height: "28px",
               "& .MuiToggleButton-root": {
-                fontSize: "0.9375rem",
-                padding: "8px 24px",
-                color: "#b3b3b3",
-                border: "1px solid #4a4a4a",
+                fontSize: "13px",
+                padding: "4px 14px",
+                color: "#a0a0a0",
+                border: "1px solid #333",
                 textTransform: "none",
-                fontWeight: 600,
-                minWidth: "120px",
+                fontWeight: 500,
+                minWidth: "80px",
+                height: "28px",
                 "&.Mui-selected": {
                   backgroundColor: "#64b5f6",
                   color: "#000",
                   borderColor: "#64b5f6",
                   "&:hover": {
-                    backgroundColor: "#42a5f5",
+                    backgroundColor: "#5aa3e0",
                   },
                 },
                 "&:hover": {
-                  backgroundColor: "#333333",
+                  backgroundColor: "#2a2a2a",
                 },
               },
             }}
@@ -222,20 +224,20 @@ export function NormalWindow() {
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
+              gap: "6px",
             }}
           >
             <Chip
               label={detectedLang === "de" ? "DE" : "EN"}
-              size="medium"
+              size="small"
               sx={{
-                backgroundColor: mode === "translate" ? "#333333" : "#2a2a2a",
-                color: mode === "translate" ? "#e0e0e0" : "#666666",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                height: "36px",
-                minWidth: "48px",
-                opacity: mode === "translate" ? 1 : 0.5,
+                backgroundColor: mode === "translate" ? "#2a2a2a" : "#222",
+                color: mode === "translate" ? "#ddd" : "#666",
+                fontWeight: 500,
+                fontSize: "11px",
+                height: "28px",
+                minWidth: "36px",
+                opacity: mode === "translate" ? 1 : 0.4,
               }}
             />
             <IconButton
@@ -243,34 +245,40 @@ export function NormalWindow() {
               onClick={handleLanguageSwitch}
               disabled={isProcessing || mode === "enhance"}
               sx={{
-                color: mode === "translate" ? "#64b5f6" : "#555555",
-                padding: "6px",
-                "&:hover": { backgroundColor: mode === "translate" ? "#333333" : "transparent" },
-                "&.Mui-disabled": { color: "#555555", cursor: "not-allowed" },
-                opacity: mode === "translate" ? 1 : 0.5,
+                color: mode === "translate" ? "#64b5f6" : "#555",
+                padding: "3px",
+                "&:hover": { backgroundColor: mode === "translate" ? "#2a2a2a" : "transparent" },
+                "&.Mui-disabled": { color: "#555", cursor: "not-allowed" },
+                opacity: mode === "translate" ? 1 : 0.4,
               }}
             >
-              <SwapHorizIcon sx={{ fontSize: 20 }} />
+              <SwapHorizIcon sx={{ fontSize: 16 }} />
             </IconButton>
             <Chip
               label={detectedLang === "de" ? "EN" : "DE"}
-              size="medium"
+              size="small"
               sx={{
-                backgroundColor: mode === "translate" ? "#333333" : "#2a2a2a",
-                color: mode === "translate" ? "#e0e0e0" : "#666666",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                height: "36px",
-                minWidth: "48px",
-                opacity: mode === "translate" ? 1 : 0.5,
+                backgroundColor: mode === "translate" ? "#2a2a2a" : "#222",
+                color: mode === "translate" ? "#ddd" : "#666",
+                fontWeight: 500,
+                fontSize: "11px",
+                height: "28px",
+                minWidth: "36px",
+                opacity: mode === "translate" ? 1 : 0.4,
               }}
             />
           </Box>
         </Box>
 
-        <Box sx={{ display: "flex", gap: 3, flex: 1, minHeight: 0 }}>
-          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography sx={{ color: "#b3b3b3", fontSize: "0.875rem", fontWeight: 500 }}>
+        <Box sx={{ display: "flex", gap: "12px", flex: 1, minHeight: 0 }}>
+          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+            <Typography sx={{
+              color: "#888",
+              fontSize: "11px",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}>
               {mode === "translate" ? "Source" : "Original"}
             </Typography>
             <TextField
@@ -279,35 +287,45 @@ export function NormalWindow() {
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
               placeholder={mode === "translate" ? "Paste or type text to translate..." : "Paste or type text to fix..."}
-              InputProps={{
-                sx: {
-                  fontSize: "1rem",
-                  lineHeight: 1.7,
-                  color: "#e0e0e0",
-                  backgroundColor: "#1f1f1f",
-                  fontFamily: "system-ui, -apple-system, sans-serif",
-                  height: "100%",
-                  alignItems: "flex-start",
+              slotProps={{
+                input: {
+                  sx: {
+                    fontSize: "13px",
+                    lineHeight: 1.5,
+                    color: "#e0e0e0",
+                    backgroundColor: "#1a1a1a",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    height: "100%",
+                    alignItems: "flex-start",
+                    padding: "12px",
+                  },
                 },
               }}
               sx={{
                 flex: 1,
                 "& .MuiOutlinedInput-root": {
                   height: "100%",
-                  "& fieldset": { borderColor: "#4a4a4a" },
-                  "&:hover fieldset": { borderColor: "#64b5f6" },
-                  "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                  "& fieldset": { borderColor: "#2a2a2a" },
+                  "&:hover fieldset": { borderColor: "#444" },
+                  "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
                 },
                 "& .MuiInputBase-input::placeholder": {
-                  color: "#666666",
+                  color: "#555",
                   opacity: 1,
+                  fontSize: "13px",
                 },
               }}
             />
           </Box>
 
-          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography sx={{ color: "#b3b3b3", fontSize: "0.875rem", fontWeight: 500 }}>
+          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+            <Typography sx={{
+              color: "#888",
+              fontSize: "11px",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}>
               {mode === "translate" ? "Translation" : "Fixed"}
             </Typography>
             <TextField
@@ -316,28 +334,32 @@ export function NormalWindow() {
               value={resultText}
               onChange={(e) => setResultText(e.target.value)}
               placeholder={isProcessing ? (mode === "translate" ? "Translating..." : "Fixing...") : "Result will appear here..."}
-              InputProps={{
-                sx: {
-                  fontSize: "1rem",
-                  lineHeight: 1.7,
-                  color: "#e0e0e0",
-                  backgroundColor: "#1f1f1f",
-                  fontFamily: "system-ui, -apple-system, sans-serif",
-                  height: "100%",
-                  alignItems: "flex-start",
+              slotProps={{
+                input: {
+                  sx: {
+                    fontSize: "13px",
+                    lineHeight: 1.5,
+                    color: "#e0e0e0",
+                    backgroundColor: "#1a1a1a",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    height: "100%",
+                    alignItems: "flex-start",
+                    padding: "12px",
+                  },
                 },
               }}
               sx={{
                 flex: 1,
                 "& .MuiOutlinedInput-root": {
                   height: "100%",
-                  "& fieldset": { borderColor: "#4a4a4a" },
-                  "&:hover fieldset": { borderColor: "#64b5f6" },
-                  "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                  "& fieldset": { borderColor: "#2a2a2a" },
+                  "&:hover fieldset": { borderColor: "#444" },
+                  "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
                 },
                 "& .MuiInputBase-input::placeholder": {
-                  color: "#666666",
+                  color: "#555",
                   opacity: 1,
+                  fontSize: "13px",
                 },
               }}
             />
@@ -347,18 +369,22 @@ export function NormalWindow() {
 
       <Box
         sx={{
-          padding: "12px 16px",
-          borderTop: "1px solid #333333",
-          backgroundColor: "#1f1f1f",
+          padding: "12px 20px",
+          borderTop: "1px solid #222",
+          backgroundColor: "#151515",
           flexShrink: 0,
         }}
       >
-        <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Stack direction="row" spacing="12px" justifyContent="space-between" alignItems="center">
+          <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
             {isProcessing && (
               <>
-                <CircularProgress size={16} sx={{ color: "#64b5f6" }} />
-                <Typography sx={{ color: "#b3b3b3", fontSize: "0.75rem" }}>
+                <CircularProgress size={12} sx={{ color: "#64b5f6" }} />
+                <Typography sx={{
+                  color: "#888",
+                  fontSize: "11px",
+                  fontWeight: 400,
+                }}>
                   {mode === "translate" ? "Translating..." : "Fixing..."}
                 </Typography>
               </>
@@ -370,25 +396,27 @@ export function NormalWindow() {
             onClick={handleCopy}
             disabled={!resultText || isProcessing}
             disableElevation
-            startIcon={<ContentCopyIcon sx={{ fontSize: 16 }} />}
+            startIcon={<ContentCopyIcon sx={{ fontSize: 14 }} />}
             sx={{
-              minWidth: 140,
-              height: 36,
-              fontSize: "0.875rem",
+              minWidth: "100px",
+              height: "28px",
+              fontSize: "13px",
               fontWeight: 500,
               textTransform: "none",
               backgroundColor: "#64b5f6",
-              color: "#000000",
+              color: "#000",
+              padding: "4px 12px",
+              borderRadius: "4px",
               "&:hover": {
-                backgroundColor: "#42a5f5",
+                backgroundColor: "#5aa3e0",
               },
               "&.Mui-disabled": {
-                backgroundColor: "#333333",
-                color: "#666666",
+                backgroundColor: "#222",
+                color: "#555",
               },
             }}
           >
-            Copy Translation
+            Copy
           </Button>
         </Stack>
       </Box>
