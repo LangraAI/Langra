@@ -154,8 +154,8 @@ export function TranslationPopup({
           <Box
             data-tauri-drag-region
             sx={{
-              borderBottom: "1px solid #333333",
-              background: "#242424",
+              borderBottom: "1px solid #222",
+              background: "#1a1a1a",
               flexShrink: 0,
               cursor: "move",
             }}
@@ -165,21 +165,21 @@ export function TranslationPopup({
               sx={{
                 display: "flex",
                 alignItems: "center",
-                padding: "8px 12px",
-                gap: 2,
-                minHeight: "44px",
+                padding: "6px 12px",
+                gap: "12px",
+                minHeight: "36px",
                 minWidth: 0,
                 overflow: "hidden",
                 cursor: "move",
               }}
             >
-              <Box data-tauri-drag-region sx={{ width: 80, flexShrink: 0, cursor: "move" }} />
+              <Box data-tauri-drag-region sx={{ width: 60, flexShrink: 0, cursor: "move" }} />
 
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 2,
+                  gap: "12px",
                   flex: 1,
                   justifyContent: "center",
                 }}
@@ -194,27 +194,27 @@ export function TranslationPopup({
                   }}
                   size="small"
                   sx={{
-                    height: "26px",
+                    height: "28px",
                     flexShrink: 0,
                     "& .MuiToggleButton-root": {
-                      fontSize: "0.7rem",
-                      padding: "3px 10px",
-                      color: "#b3b3b3",
-                      border: "1px solid #4a4a4a",
+                      fontSize: "13px",
+                      padding: "4px 14px",
+                      color: "#a0a0a0",
+                      border: "1px solid #333",
                       textTransform: "none",
                       fontWeight: 500,
-                      lineHeight: "1.2",
-                      minWidth: "60px",
+                      minWidth: "80px",
+                      height: "28px",
                       "&.Mui-selected": {
                         backgroundColor: "#64b5f6",
                         color: "#000",
                         borderColor: "#64b5f6",
                         "&:hover": {
-                          backgroundColor: "#42a5f5",
+                          backgroundColor: "#5aa3e0",
                         },
                       },
                       "&:hover": {
-                        backgroundColor: "#333333",
+                        backgroundColor: "#2a2a2a",
                       },
                     },
                   }}
@@ -231,20 +231,20 @@ export function TranslationPopup({
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 1,
+                    gap: "6px",
                   }}
                 >
                   <Chip
                     label={detectedLanguage === "de" ? "DE" : "EN"}
                     size="small"
                     sx={{
-                      backgroundColor: mode === "translate" ? "#333333" : "#2a2a2a",
-                      color: mode === "translate" ? "#e0e0e0" : "#666666",
+                      backgroundColor: mode === "translate" ? "#2a2a2a" : "#222",
+                      color: mode === "translate" ? "#ddd" : "#666",
                       fontWeight: 500,
-                      fontSize: "0.7rem",
-                      height: "26px",
+                      fontSize: "11px",
+                      height: "28px",
                       minWidth: "36px",
-                      opacity: mode === "translate" ? 1 : 0.5,
+                      opacity: mode === "translate" ? 1 : 0.4,
                     }}
                   />
                   <IconButton
@@ -252,26 +252,26 @@ export function TranslationPopup({
                     onClick={onLanguageSwitch}
                     disabled={isStreaming || mode === "enhance"}
                     sx={{
-                      color: mode === "translate" ? "#64b5f6" : "#555555",
-                      padding: "2px",
-                      "&:hover": { backgroundColor: mode === "translate" ? "#333333" : "transparent" },
-                      "&.Mui-disabled": { color: "#555555", cursor: "not-allowed" },
-                      opacity: mode === "translate" ? 1 : 0.5,
+                      color: mode === "translate" ? "#64b5f6" : "#555",
+                      padding: "3px",
+                      "&:hover": { backgroundColor: mode === "translate" ? "#2a2a2a" : "transparent" },
+                      "&.Mui-disabled": { color: "#555", cursor: "not-allowed" },
+                      opacity: mode === "translate" ? 1 : 0.4,
                     }}
                   >
-                    <SwapHorizIcon sx={{ fontSize: 16 }} />
+                    <SwapHorizIcon sx={{ fontSize: 14 }} />
                   </IconButton>
                   <Chip
                     label={detectedLanguage === "de" ? "EN" : "DE"}
                     size="small"
                     sx={{
-                      backgroundColor: mode === "translate" ? "#333333" : "#2a2a2a",
-                      color: mode === "translate" ? "#e0e0e0" : "#666666",
+                      backgroundColor: mode === "translate" ? "#2a2a2a" : "#222",
+                      color: mode === "translate" ? "#ddd" : "#666",
                       fontWeight: 500,
-                      fontSize: "0.7rem",
-                      height: "26px",
+                      fontSize: "11px",
+                      height: "28px",
                       minWidth: "36px",
-                      opacity: mode === "translate" ? 1 : 0.5,
+                      opacity: mode === "translate" ? 1 : 0.4,
                     }}
                   />
                 </Box>
@@ -281,13 +281,13 @@ export function TranslationPopup({
                 size="small"
                 onClick={(e) => setMenuAnchorEl(e.currentTarget)}
                 sx={{
-                  color: "#999999",
-                  padding: "4px",
+                  color: "#888",
+                  padding: "3px",
                   flexShrink: 0,
-                  "&:hover": { backgroundColor: "#333333" },
+                  "&:hover": { backgroundColor: "#2a2a2a" },
                 }}
               >
-                <SettingsIcon sx={{ fontSize: 16 }} />
+                <SettingsIcon sx={{ fontSize: 14 }} />
               </IconButton>
 
               <Menu
@@ -351,21 +351,21 @@ export function TranslationPopup({
             sx={{
               flex: 1,
               overflow: "auto",
-              padding: 3,
+              padding: "16px",
               minHeight: 0,
               position: "relative",
               cursor: "move",
               "&::-webkit-scrollbar": {
-                width: "6px",
+                width: "4px",
               },
               "&::-webkit-scrollbar-track": {
                 background: "transparent",
               },
               "&::-webkit-scrollbar-thumb": {
-                background: "#4a4a4a",
-                borderRadius: "3px",
+                background: "#333",
+                borderRadius: "2px",
                 "&:hover": {
-                  background: "#5a5a5a",
+                  background: "#444",
                 },
               },
             }}
@@ -377,13 +377,13 @@ export function TranslationPopup({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  minHeight: 120,
-                  color: "#b3b3b3",
+                  minHeight: 100,
+                  color: "#888",
                   cursor: "move",
                 }}
               >
-                <CircularProgress size={24} sx={{ marginRight: 2, color: "#64b5f6" }} />
-                <Typography variant="body2">{mode === "enhance" ? "Fixing..." : "Translating..."}</Typography>
+                <CircularProgress size={18} sx={{ marginRight: 1.5, color: "#64b5f6" }} />
+                <Typography sx={{ fontSize: "13px" }}>{mode === "enhance" ? "Fixing..." : "Translating..."}</Typography>
               </Box>
             ) : (
               <>
@@ -391,8 +391,8 @@ export function TranslationPopup({
                   data-tauri-drag-region
                   variant="body1"
                   sx={{
-                    fontSize: "1rem",
-                    lineHeight: 1.6,
+                    fontSize: "13px",
+                    lineHeight: 1.5,
                     color: "#e0e0e0",
                     wordWrap: "break-word",
                     whiteSpace: "pre-wrap",
@@ -424,7 +424,7 @@ export function TranslationPopup({
 
           <Box sx={{ flexShrink: 0 }}>
             {showEnhanceInput && mode === "enhance" && !isStreaming && translation && (
-              <Box sx={{ padding: "12px 16px", backgroundColor: "#1f1f1f", borderTop: "1px solid #333333" }}>
+              <Box sx={{ padding: "10px 12px", backgroundColor: "#151515", borderTop: "1px solid #222" }}>
                 <TextField
                   fullWidth
                   size="small"
@@ -453,20 +453,24 @@ export function TranslationPopup({
                       }
                     }
                   }}
-                  InputProps={{
-                    sx: {
-                      fontSize: "0.875rem",
-                      color: "#e0e0e0",
-                      backgroundColor: "#1a1a1a",
-                      "& fieldset": { borderColor: "#4a4a4a" },
-                      "&:hover fieldset": { borderColor: "#64b5f6" },
-                      "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                  slotProps={{
+                    input: {
+                      sx: {
+                        fontSize: "13px",
+                        color: "#e0e0e0",
+                        backgroundColor: "#1a1a1a",
+                        height: "32px",
+                        "& fieldset": { borderColor: "#2a2a2a" },
+                        "&:hover fieldset": { borderColor: "#444" },
+                        "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                      },
                     },
                   }}
                   sx={{
                     "& .MuiInputBase-input::placeholder": {
-                      color: "#808080",
+                      color: "#555",
                       opacity: 1,
+                      fontSize: "13px",
                     },
                   }}
                 />
@@ -475,11 +479,11 @@ export function TranslationPopup({
 
             <Stack
               direction="row"
-              spacing={1}
+              spacing="8px"
               sx={{
-                padding: "12px 16px",
-                backgroundColor: "#1f1f1f",
-                borderTop: showEnhanceInput && mode === "enhance" && !isStreaming && translation ? "none" : "1px solid #333333",
+                padding: "10px 12px",
+                backgroundColor: "#151515",
+                borderTop: showEnhanceInput && mode === "enhance" && !isStreaming && translation ? "none" : "1px solid #222",
                 flexShrink: 0,
               }}
             >
@@ -488,14 +492,15 @@ export function TranslationPopup({
                 onClick={onClose}
                 size="small"
                 sx={{
-                  minWidth: 64,
-                  height: 36,
-                  fontSize: "0.875rem",
+                  minWidth: 50,
+                  height: 28,
+                  fontSize: "13px",
                   fontWeight: 500,
                   textTransform: "none",
-                  color: "#b3b3b3",
+                  color: "#888",
+                  padding: "4px 10px",
                   "&:hover": {
-                    backgroundColor: "#333333",
+                    backgroundColor: "#2a2a2a",
                   },
                 }}
               >
@@ -513,9 +518,9 @@ export function TranslationPopup({
                 }}
               >
                 {isStreaming && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CircularProgress size={14} sx={{ color: "#64b5f6" }} />
-                    <Typography variant="caption" sx={{ color: "#b3b3b3", fontSize: "0.75rem", fontWeight: 500 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <CircularProgress size={12} sx={{ color: "#64b5f6" }} />
+                    <Typography sx={{ color: "#888", fontSize: "11px", fontWeight: 400 }}>
                       {progress}%
                     </Typography>
                   </Box>
@@ -528,14 +533,14 @@ export function TranslationPopup({
                     size="small"
                     onClick={() => setShowEnhanceInput(!showEnhanceInput)}
                     sx={{
-                      color: showEnhanceInput ? "#64b5f6" : "#b3b3b3",
-                      padding: "6px",
+                      color: showEnhanceInput ? "#64b5f6" : "#888",
+                      padding: "4px",
                       "&:hover": {
-                        backgroundColor: "#333333",
+                        backgroundColor: "#2a2a2a",
                       },
                     }}
                   >
-                    <AutoFixHighIcon sx={{ fontSize: 20 }} />
+                    <AutoFixHighIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Tooltip>
               )}
@@ -545,15 +550,15 @@ export function TranslationPopup({
                   size="small"
                   onClick={onExpandToNormal}
                   sx={{
-                    color: "#b3b3b3",
-                    padding: "6px",
+                    color: "#888",
+                    padding: "4px",
                     "&:hover": {
-                      backgroundColor: "#333333",
+                      backgroundColor: "#2a2a2a",
                       color: "#64b5f6",
                     },
                   }}
                 >
-                  <OpenInFullIcon sx={{ fontSize: 20 }} />
+                  <OpenInFullIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
 
@@ -565,14 +570,15 @@ export function TranslationPopup({
                     size="small"
                     disabled={isStreaming || !translation}
                     sx={{
-                      minWidth: 64,
-                      height: 36,
-                      fontSize: "0.875rem",
+                      minWidth: 50,
+                      height: 28,
+                      fontSize: "13px",
                       fontWeight: 500,
                       textTransform: "none",
                       color: "#64b5f6",
+                      padding: "4px 10px",
                       "&:hover": {
-                        backgroundColor: "#333333",
+                        backgroundColor: "#2a2a2a",
                       },
                     }}
                   >
@@ -590,15 +596,16 @@ export function TranslationPopup({
                     disabled={isStreaming || !translation}
                     disableElevation
                     sx={{
-                      minWidth: 64,
-                      height: 36,
-                  fontSize: "0.875rem",
+                      minWidth: 60,
+                      height: 28,
+                  fontSize: "13px",
                   fontWeight: 500,
                   textTransform: "none",
                   backgroundColor: "#64b5f6",
-                  color: "#000000",
+                  color: "#000",
+                  padding: "4px 12px",
                   "&:hover": {
-                    backgroundColor: "#42a5f5",
+                    backgroundColor: "#5aa3e0",
                   },
                 }}
               >
@@ -612,10 +619,10 @@ export function TranslationPopup({
           <Box
             data-tauri-drag-region
             sx={{
-              padding: "6px 16px",
+              padding: "5px 12px",
               textAlign: "center",
-              backgroundColor: "#1a1a1a",
-              borderTop: "1px solid #2a2a2a",
+              backgroundColor: "#111",
+              borderTop: "1px solid #1a1a1a",
               position: "relative",
               flexShrink: 0,
               cursor: "move",
@@ -625,8 +632,8 @@ export function TranslationPopup({
               data-tauri-drag-region
               variant="caption"
               sx={{
-                fontSize: "0.65rem",
-                color: "#808080",
+                fontSize: "10px",
+                color: "#666",
                 fontWeight: 400,
                 cursor: "move",
               }}
