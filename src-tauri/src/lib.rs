@@ -1,4 +1,3 @@
-mod language_detector;
 mod translator;
 mod utils;
 mod windows;
@@ -368,28 +367,15 @@ pub async fn trigger_translation(app: &AppHandle) {
 
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
-    println!("[TRIGGER] Checking credentials...");
-    let settings = settings::load_settings();
-    let has_api_key = if settings.provider == "azure" {
-        !settings.azure_endpoint.is_empty() && !settings.azure_api_key.is_empty()
-    } else {
-        !settings.openai_api_key.is_empty()
-    };
+    println!("[TRIGGER] Checking if user is logged in...");
 
-    let has_access_token = match get_access_token() {
-        Ok(_) => true,
-        Err(_) => false,
-    };
-
-    if !has_api_key && !has_access_token {
-        println!("[TRIGGER] No credentials configured, showing welcome screen");
+    if get_access_token().is_err() {
+        println!("[TRIGGER] Not logged in, showing welcome screen");
         let _ = app.emit("credentials-missing", ());
         return;
     }
 
-    if has_access_token && !has_api_key {
-        println!("[TRIGGER] Using Langra account (access token found)");
-    }
+    println!("[TRIGGER] User logged in, proceeding with translation");
 
     println!("[TRIGGER] Reading clipboard (first Cmd+C already copied it)");
 
@@ -414,15 +400,8 @@ pub async fn trigger_translation(app: &AppHandle) {
     if !selected_text.is_empty() {
         println!("[TRIGGER] Translating text: '{}'", selected_text);
 
-        let lang = match language_detector::detect_language(&selected_text).await {
-            Ok(detected_lang) => detected_lang,
-            Err(e) => {
-                println!("[TRIGGER] Language detection failed, using fallback: {:?}", e);
-                language_detector::detect_language_fallback(&selected_text)
-            }
-        };
-
-        println!("[TRIGGER] Detected language: {}", lang);
+        let lang = "en".to_string();
+        println!("[TRIGGER] Using default language: {}", lang);
 
         #[derive(serde::Serialize, Clone)]
         struct TranslationStartPayload {
@@ -468,26 +447,7 @@ pub async fn trigger_translation(app: &AppHandle) {
                         || error_msg.contains("Invalid OpenAI credentials")
                         || error_msg.contains("401")
                         || error_msg.contains("403") {
-
-                        println!("[TRIGGER] ⚠️ Invalid credentials detected, clearing settings...");
-
-                        let current_settings = settings::load_settings();
-
-                        let cleared_settings = settings::Settings {
-                            provider: current_settings.provider,
-                            openai_api_key: String::new(),
-                            azure_endpoint: String::new(),
-                            azure_api_key: String::new(),
-                            azure_deployment: current_settings.azure_deployment,
-                            style: current_settings.style,
-                        };
-
-                        if let Err(save_err) = settings::save_settings_to_disk(&cleared_settings) {
-                            eprintln!("[TRIGGER] Failed to clear credentials: {}", save_err);
-                        } else {
-                            println!("[TRIGGER] ✅ Credentials cleared, showing welcome screen");
-                            let _ = app.emit("credentials-missing", ());
-                        }
+                        println!("[TRIGGER] ⚠️ Invalid credentials detected");
                     }
 
                     let _ = app.emit("translation-error", error_msg);
@@ -527,26 +487,7 @@ async fn retranslate(text: String, source_lang: String) {
                 || error_msg.contains("Invalid OpenAI credentials")
                 || error_msg.contains("401")
                 || error_msg.contains("403") {
-
-                println!("[RETRANSLATE] ⚠️ Invalid credentials detected, clearing settings...");
-
-                let current_settings = settings::load_settings();
-
-                let cleared_settings = settings::Settings {
-                    provider: current_settings.provider,
-                    openai_api_key: String::new(),
-                    azure_endpoint: String::new(),
-                    azure_api_key: String::new(),
-                    azure_deployment: current_settings.azure_deployment,
-                    style: current_settings.style,
-                };
-
-                if let Err(save_err) = settings::save_settings_to_disk(&cleared_settings) {
-                    eprintln!("[RETRANSLATE] Failed to clear credentials: {}", save_err);
-                } else {
-                    println!("[RETRANSLATE] ✅ Credentials cleared, showing welcome screen");
-                    let _ = app.emit("credentials-missing", ());
-                }
+                println!("[RETRANSLATE] ⚠️ Invalid credentials detected");
             }
 
             let _ = app.emit("translation-error", error_msg);
@@ -678,6 +619,7 @@ pub fn run() {
             windows::set_always_on_top,
             settings::get_settings,
             settings::save_settings,
+            settings::save_api_keys,
             enhance_text_with_instruction,
             verify_access_token,
             save_access_token,

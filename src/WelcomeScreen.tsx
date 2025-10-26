@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { Box, Typography, Button, Stack } from "@mui/material";
-import KeyIcon from "@mui/icons-material/Key";
 import LoginIcon from "@mui/icons-material/Login";
 import { LoginDialog } from "./LoginDialog";
 
 interface WelcomeScreenProps {
-  onOpenSettings: () => void;
   onLoginSuccess?: () => void;
 }
 
-export function WelcomeScreen({ onOpenSettings, onLoginSuccess }: WelcomeScreenProps) {
+export function WelcomeScreen({ onLoginSuccess }: WelcomeScreenProps) {
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   const handleLoginClick = () => {
@@ -73,10 +71,10 @@ export function WelcomeScreen({ onOpenSettings, onLoginSuccess }: WelcomeScreenP
             lineHeight: 1.6,
           }}
         >
-          Choose how you want to get started
+          Sign in to get started with instant translations
         </Typography>
 
-        <Stack spacing={2} sx={{ pointerEvents: "auto" }}>
+        <Stack spacing={2} sx={{ pointerEvents: "auto", width: "100%" }}>
           <Button
             variant="contained"
             fullWidth
@@ -96,29 +94,7 @@ export function WelcomeScreen({ onOpenSettings, onLoginSuccess }: WelcomeScreenP
               },
             }}
           >
-            Use Langra Account
-          </Button>
-
-          <Button
-            variant="outlined"
-            fullWidth
-            startIcon={<KeyIcon />}
-            onClick={onOpenSettings}
-            sx={{
-              borderColor: "#4a4a4a",
-              color: "#e0e0e0",
-              textTransform: "none",
-              fontWeight: 500,
-              py: 1.5,
-              fontSize: "0.95rem",
-              cursor: "pointer",
-              "&:hover": {
-                borderColor: "#64b5f6",
-                backgroundColor: "#333333",
-              },
-            }}
-          >
-            Add your own API key
+            Sign In / Sign Up
           </Button>
         </Stack>
 
@@ -129,9 +105,12 @@ export function WelcomeScreen({ onOpenSettings, onLoginSuccess }: WelcomeScreenP
             display: "block",
             mt: 4,
             fontSize: "0.8rem",
+            lineHeight: 1.5,
           }}
         >
-          Your API keys are stored locally and never shared
+          Free tier with 10,000 characters/month
+          <br />
+          Or bring your own API key for unlimited usage
         </Typography>
       </Box>
 

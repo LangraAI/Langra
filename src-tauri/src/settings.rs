@@ -5,25 +5,24 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
-    pub provider: String,
-    pub openai_api_key: String,
-    pub azure_endpoint: String,
-    pub azure_api_key: String,
-    pub azure_deployment: String,
     pub style: String,
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Settings {
-            provider: "azure".to_string(),
-            openai_api_key: String::new(),
-            azure_endpoint: String::new(),
-            azure_api_key: String::new(),
-            azure_deployment: "gpt-4o-mini".to_string(),
             style: "friendly".to_string(),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ApiKeySettings {
+    pub provider: String,
+    pub openai_api_key: String,
+    pub azure_endpoint: String,
+    pub azure_api_key: String,
+    pub azure_deployment: String,
 }
 
 static SETTINGS: Mutex<Option<Settings>> = Mutex::new(None);
@@ -92,44 +91,44 @@ pub fn get_settings() -> Settings {
 #[tauri::command]
 pub async fn save_settings(settings: Settings) -> Result<(), String> {
     save_settings_to_disk(&settings)?;
-
-    if settings.provider == "azure"
-        && !settings.azure_endpoint.is_empty()
-        && !settings.azure_api_key.is_empty()
-        && !settings.azure_deployment.is_empty()
-    {
-        if let Ok(token) = crate::get_access_token() {
-            println!("[SETTINGS] Sending Azure credentials to backend");
-
-            let client = reqwest::Client::new();
-            let response = client
-                .post("http://localhost:3000/api/credentials")
-                .header("Authorization", format!("Bearer {}", token))
-                .json(&serde_json::json!({
-                    "azure_endpoint": settings.azure_endpoint,
-                    "azure_api_key": settings.azure_api_key,
-                    "azure_deployment": settings.azure_deployment,
-                }))
-                .send()
-                .await;
-
-            match response {
-                Ok(resp) => {
-                    if resp.status().is_success() {
-                        println!("[SETTINGS] ✅ Credentials saved to backend");
-                    } else {
-                        println!("[SETTINGS] ⚠️ Failed to save credentials to backend: {}", resp.status());
-                    }
-                }
-                Err(e) => {
-                    println!("[SETTINGS] ⚠️ Failed to send credentials to backend: {}", e);
-                }
-            }
-        } else {
-            println!("[SETTINGS] No access token found, credentials stored locally only");
-        }
-    }
-
     Ok(())
+}
+
+#[tauri::command]
+pub async fn save_api_keys(api_settings: ApiKeySettings) -> Result<(), String> {
+    let token = crate::get_access_token()
+        .map_err(|_| "You must be logged in to save API keys".to_string())?;
+
+    println!("[SETTINGS] Sending API credentials to backend");
+
+    let client = reqwest::Client::new();
+
+    let json_body = if api_settings.provider == "azure" {
+        serde_json::json!({
+            "azure_endpoint": api_settings.azure_endpoint,
+            "azure_api_key": api_settings.azure_api_key,
+            "azure_deployment": api_settings.azure_deployment,
+        })
+    } else {
+        serde_json::json!({
+            "openai_api_key": api_settings.openai_api_key,
+        })
+    };
+
+    let response = client
+        .post("http://localhost:3000/api/credentials")
+        .header("Authorization", format!("Bearer {}", token))
+        .json(&json_body)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to connect to backend: {}", e))?;
+
+    if response.status().is_success() {
+        println!("[SETTINGS] ✅ API keys saved to backend");
+        Ok(())
+    } else {
+        let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+        Err(format!("Failed to save API keys: {}", error_text))
+    }
 }
 

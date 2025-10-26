@@ -36,30 +36,18 @@ function App() {
 
     const checkCredentials = async () => {
       try {
-        const settings: any = await invoke("get_settings");
-        console.log("[FRONTEND] Checking credentials on startup...");
+        console.log("[FRONTEND] Checking if user is logged in...");
 
-        const hasApiKey = settings.provider === "azure"
-          ? settings.azure_endpoint && settings.azure_api_key
-          : settings.openai_api_key;
-
-        let hasAccessToken = false;
         try {
           const accessToken = await invoke<string>("get_access_token");
-          hasAccessToken = !!accessToken;
-          console.log("[FRONTEND] Access token found:", !!accessToken);
+          console.log("[FRONTEND] User is logged in, app ready");
         } catch (err) {
-          console.log("[FRONTEND] No access token found");
-        }
-
-        if (!hasApiKey && !hasAccessToken) {
-          console.log("[FRONTEND] No credentials found, showing welcome screen");
+          console.log("[FRONTEND] No access token found, showing welcome screen");
           setShowWelcome(true);
-        } else {
-          console.log("[FRONTEND] Credentials found, app ready");
         }
       } catch (error) {
         console.error("[FRONTEND] Failed to check credentials:", error);
+        setShowWelcome(true);
       }
     };
     checkCredentials();
@@ -268,10 +256,6 @@ function App() {
     }
   };
 
-  const handleOpenSettings = () => {
-    setSettingsOpen(true);
-  };
-
   const handleCloseSettings = async (credentialsSaved?: boolean) => {
     console.log("[FRONTEND] Settings closed, credentials saved:", credentialsSaved);
     setSettingsOpen(false);
@@ -285,11 +269,9 @@ function App() {
     setShowSuccess(false);
 
     try {
-      const accessToken = await invoke<string>("get_access_token");
-      if (accessToken) {
-        console.log("[FRONTEND] Access token verified, staying logged in");
-        await invoke("hide_translator_window");
-      }
+      await invoke<string>("get_access_token");
+      console.log("[FRONTEND] Access token verified, staying logged in");
+      await invoke("hide_translator_window");
     } catch (err) {
       console.log("[FRONTEND] No access token found after success, showing welcome");
       setShowWelcome(true);
@@ -308,7 +290,6 @@ function App() {
         <SuccessScreen onClose={handleSuccessClose} />
       ) : showWelcome ? (
         <WelcomeScreen
-          onOpenSettings={handleOpenSettings}
           onLoginSuccess={handleLoginSuccess}
         />
       ) : (
