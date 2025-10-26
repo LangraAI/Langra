@@ -535,25 +535,36 @@ pub fn run() {
                         println!("[DEEP_LINK] Received URL: {}", url_str);
 
                         if let Ok(url) = url::Url::parse(&url_str) {
-                            if url.scheme() == "langra" && url.host_str() == Some("auth") {
-                                if let Some(token) = url.query_pairs()
-                                    .find(|(key, _)| key == "token")
-                                    .map(|(_, value)| value.to_string())
-                                {
-                                    println!("[DEEP_LINK] Received token, saving...");
+                            if url.scheme() == "langra" {
+                                match url.host_str() {
+                                    Some("auth") => {
+                                        if let Some(token) = url.query_pairs()
+                                            .find(|(key, _)| key == "token")
+                                            .map(|(_, value)| value.to_string())
+                                        {
+                                            println!("[DEEP_LINK] Received token, saving...");
 
-                                    let handle_for_save = handle_clone.clone();
-                                    tauri::async_runtime::spawn(async move {
-                                        match save_access_token(token).await {
-                                            Ok(_) => {
-                                                println!("[DEEP_LINK] Token saved successfully");
-                                                let _ = handle_for_save.emit("auth-success", ());
-                                            }
-                                            Err(e) => {
-                                                println!("[DEEP_LINK] Failed to save token: {}", e);
-                                            }
+                                            let handle_for_save = handle_clone.clone();
+                                            tauri::async_runtime::spawn(async move {
+                                                match save_access_token(token).await {
+                                                    Ok(_) => {
+                                                        println!("[DEEP_LINK] Token saved successfully");
+                                                        let _ = handle_for_save.emit("auth-success", ());
+                                                    }
+                                                    Err(e) => {
+                                                        println!("[DEEP_LINK] Failed to save token: {}", e);
+                                                    }
+                                                }
+                                            });
                                         }
-                                    });
+                                    }
+                                    Some("open") => {
+                                        println!("[DEEP_LINK] Opening Langra app...");
+                                        windows::show_translator_window(false);
+                                    }
+                                    _ => {
+                                        println!("[DEEP_LINK] Unknown host: {:?}", url.host_str());
+                                    }
                                 }
                             }
                         }
