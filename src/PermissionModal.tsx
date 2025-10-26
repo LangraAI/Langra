@@ -8,7 +8,6 @@ export function PermissionModal() {
 
   useEffect(() => {
     if (step === "waiting") {
-      // Poll for permission status every second
       const interval = setInterval(async () => {
         try {
           const granted = await invoke<boolean>("check_input_monitoring_permission");
@@ -30,10 +29,8 @@ export function PermissionModal() {
       setIsChecking(true);
       console.log("[PERMISSIONS] Opening System Settings...");
 
-      // Open System Settings directly (skip the system dialog)
       await invoke("open_input_monitoring_settings");
 
-      // Move to waiting step
       setStep("waiting");
     } catch (error) {
       console.error("[PERMISSIONS] Error opening settings:", error);
@@ -174,7 +171,6 @@ export function PermissionModal() {
                   await invoke("restart_app");
                 } catch (error) {
                   console.error("[PERMISSIONS] Failed to restart:", error);
-                  // Fallback to reload
                   window.location.reload();
                 }
               }}

@@ -25,7 +25,6 @@ export function NormalWindow() {
     try {
       let langToUse = detectedLang;
 
-      // Only auto-detect if language wasn't manually selected
       if (!isManualLangSelection) {
         console.log("[NORMAL_WINDOW] Auto-detecting language...");
         try {
@@ -35,7 +34,7 @@ export function NormalWindow() {
           langToUse = detected;
         } catch (error) {
           console.error("[NORMAL_WINDOW] Language detection failed:", error);
-          langToUse = "en"; // fallback to English
+          langToUse = "en";
         }
       } else {
         console.log("[NORMAL_WINDOW] Using manually selected language:", langToUse);
@@ -59,11 +58,9 @@ export function NormalWindow() {
     }
   }, [sourceText, mode, detectedLang, isManualLangSelection]);
 
-  // Debounced auto-processing
   useEffect(() => {
     if (!sourceText.trim()) {
       setResultText("");
-      // Reset to auto-detect when text is cleared
       setIsManualLangSelection(false);
       return;
     }
@@ -120,10 +117,9 @@ export function NormalWindow() {
   const handleLanguageSwitch = () => {
     const newLang = detectedLang === "de" ? "en" : "de";
     setDetectedLang(newLang);
-    setIsManualLangSelection(true); // Mark as manual selection
+    setIsManualLangSelection(true); 
     setResultText("");
 
-    // Only trigger translation if there's text to translate
     if (sourceText.trim()) {
       setIsProcessing(true);
       invoke("retranslate", {

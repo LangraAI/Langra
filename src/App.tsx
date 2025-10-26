@@ -45,11 +45,8 @@ function App() {
 
         if (!hasPermission) {
           console.log("[FRONTEND] No Input Monitoring permission, showing permission modal");
-          // Show the window first
           await invoke("show_window");
-          // Set it on top
           await invoke("set_always_on_top", { onTop: true });
-          // Then show the modal
           setShowPermissionModal(true);
           return false;
         }
@@ -66,10 +63,9 @@ function App() {
       try {
         console.log("[FRONTEND] Checking if user is logged in...");
 
-        // First check if we have Input Monitoring permission
         const hasPermission = await checkPermissions();
         if (!hasPermission) {
-          return; // Permission modal will be shown
+          return; 
         }
 
         try {

@@ -469,7 +469,6 @@ pub async fn trigger_translation(app: &AppHandle) {
     if !selected_text.is_empty() {
         println!("[TRIGGER] Translating text: '{}'", selected_text);
 
-        // Detect the language of the selected text
         let lang = match translator::detect_language(&selected_text).await {
             Ok(detected_lang) => {
                 println!("[TRIGGER] Detected language: {}", detected_lang);
@@ -669,7 +668,6 @@ pub fn run() {
             println!("[SETUP] Creating translator window at startup...");
             let window = windows::get_translator_window(false);
 
-            // Prevent window close from quitting the app
             let window_clone = window.clone();
             window.on_window_event(move |event| {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
