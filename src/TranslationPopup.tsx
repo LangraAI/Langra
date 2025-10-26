@@ -312,7 +312,7 @@ export function TranslationPopup({
                         console.error("[POPUP] Logout failed:", error);
                       }
                     } else {
-                      window.open("https://langra.app/auth", "_blank");
+                      window.open("https://langra.de/auth", "_blank");
                     }
                   }}
                   sx={{
