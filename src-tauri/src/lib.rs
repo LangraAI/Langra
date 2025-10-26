@@ -37,6 +37,49 @@ fn copy_to_clipboard(text: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn check_input_monitoring_permission() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        #[link(name = "CoreGraphics", kind = "framework")]
+        extern "C" {
+            fn CGPreflightListenEventAccess() -> u8;
+        }
+
+        unsafe {
+            CGPreflightListenEventAccess() != 0
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+#[tauri::command]
+fn request_input_monitoring_permission() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        #[link(name = "CoreGraphics", kind = "framework")]
+        extern "C" {
+            fn CGRequestListenEventAccess() -> u8;
+        }
+
+        println!("[PERMISSIONS] Requesting Input Monitoring permission...");
+        unsafe {
+            let result = CGRequestListenEventAccess();
+            println!("[PERMISSIONS] Request result: {}", result);
+            result != 0
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+#[tauri::command]
 fn open_input_monitoring_settings() {
     #[cfg(target_os = "macos")]
     {
@@ -588,36 +631,13 @@ pub fn run() {
             window.hide().unwrap();
             println!("[SETUP] Translator window created and hidden");
 
-            #[cfg(target_os = "macos")]
-            {
-                println!("[PERMISSIONS] Requesting Input Monitoring permission...");
-
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_secs(1));
-
-                    #[link(name = "CoreGraphics", kind = "framework")]
-                    extern "C" {
-                        fn CGRequestListenEventAccess() -> u8;
-                        fn CGPreflightListenEventAccess() -> u8;
-                    }
-
-                    unsafe {
-                        if CGPreflightListenEventAccess() == 0 {
-                            println!("[PERMISSIONS] No permission yet, requesting...");
-                            let granted = CGRequestListenEventAccess();
-                            println!("[PERMISSIONS] Permission {}", if granted != 0 { "granted" } else { "denied" });
-                        } else {
-                            println!("[PERMISSIONS] Permission already granted");
-                        }
-                    }
-                });
-            }
-
             keyboard_monitor::start_listener(handle);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             copy_to_clipboard,
+            check_input_monitoring_permission,
+            request_input_monitoring_permission,
             open_input_monitoring_settings,
             open_url,
             show_translator_with_selected_text,

@@ -5,6 +5,7 @@ import { TranslationPopup } from "./TranslationPopup";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { SuccessScreen } from "./SuccessScreen";
 import { SettingsDialog } from "./SettingsDialog";
+import { PermissionModal } from "./PermissionModal";
 
 function App() {
   const [popup, setPopup] = useState({
@@ -19,6 +20,7 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
 
   useEffect(() => {
     const loadMode = async () => {
@@ -34,9 +36,34 @@ function App() {
     };
     loadMode();
 
+    const checkPermissions = async () => {
+      try {
+        console.log("[FRONTEND] Checking Input Monitoring permission...");
+        const hasPermission = await invoke<boolean>("check_input_monitoring_permission");
+
+        if (!hasPermission) {
+          console.log("[FRONTEND] No Input Monitoring permission, showing permission modal");
+          setShowPermissionModal(true);
+          return false;
+        }
+
+        console.log("[FRONTEND] Input Monitoring permission granted");
+        return true;
+      } catch (error) {
+        console.error("[FRONTEND] Failed to check permission:", error);
+        return false;
+      }
+    };
+
     const checkCredentials = async () => {
       try {
         console.log("[FRONTEND] Checking if user is logged in...");
+
+        // First check if we have Input Monitoring permission
+        const hasPermission = await checkPermissions();
+        if (!hasPermission) {
+          return; // Permission modal will be shown
+        }
 
         try {
           await invoke<string>("get_access_token");
@@ -64,23 +91,6 @@ function App() {
     const setupListeners = async () => {
       try {
         const currentWindow = getCurrentWebviewWindow();
-
-        const unlistenPermission = await currentWindow.listen("check-input-monitoring-permission", () => {
-          console.log("[FRONTEND] Checking Input Monitoring permission...");
-          if (window.confirm(
-            "Langra needs Input Monitoring permission to detect Cmd+C+C.\n\n" +
-            "Click OK to open System Settings.\n\n" +
-            "Then:\n" +
-            "1. Click the lock and enter your password\n" +
-            "2. Click the + button\n" +
-            "3. Navigate to /Applications/Langra.de\n" +
-            "4. Toggle it ON\n" +
-            "5. Restart Langra"
-          )) {
-            invoke("open_input_monitoring_settings");
-          }
-        });
-        unlistenFns.push(unlistenPermission);
 
         const unlistenStart = await currentWindow.listen<{detected_language: string, original_text: string}>("translation-start", (event) => {
           console.log("[FRONTEND] Translation started - opening popup");
@@ -284,8 +294,27 @@ function App() {
     setShowSuccess(true);
   };
 
+  const handlePermissionGranted = async () => {
+    console.log("[FRONTEND] Input Monitoring permission granted!");
+    setShowPermissionModal(false);
+
+    // Now check if user is logged in
+    try {
+      await invoke<string>("get_access_token");
+      console.log("[FRONTEND] User is logged in, app ready");
+      await invoke("hide_translator_window");
+    } catch (err) {
+      console.log("[FRONTEND] No access token found, showing welcome screen");
+      setShowWelcome(true);
+    }
+  };
+
   return (
     <div className="w-full h-screen" style={{ background: "#1a1a1a" }}>
+      {showPermissionModal && (
+        <PermissionModal onPermissionGranted={handlePermissionGranted} />
+      )}
+
       {showSuccess ? (
         <SuccessScreen onClose={handleSuccessClose} />
       ) : showWelcome ? (
