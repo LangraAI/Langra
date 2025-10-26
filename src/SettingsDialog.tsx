@@ -48,7 +48,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       setSettings(loadedSettings);
 
       try {
-        const response = await fetch("http://localhost:3000/api/credentials/check", {
+        const response = await fetch("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/credentials/check", {
           headers: {
             "Authorization": `Bearer ${await invoke<string>("get_access_token")}`,
           },
@@ -96,7 +96,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const handleDeleteCredentials = async () => {
     try {
       const token = await invoke<string>("get_access_token");
-      const response = await fetch("http://localhost:3000/api/credentials", {
+      const response = await fetch("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/credentials", {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`,

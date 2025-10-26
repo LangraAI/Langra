@@ -153,7 +153,7 @@ async fn verify_access_token(token: String) -> Result<serde_json::Value, String>
 
     let client = reqwest::Client::new();
     let response = client
-        .post("http://localhost:3000/api/tokens/verify")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/tokens/verify")
         .json(&serde_json::json!({
             "token": token
         }))
@@ -281,7 +281,7 @@ async fn login_and_get_token(email: String, password: String) -> Result<serde_js
     let client = reqwest::Client::new();
 
     let login_response = client
-        .post("http://localhost:3000/api/auth/login")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/auth/login")
         .json(&serde_json::json!({
             "email": email,
             "password": password
@@ -304,7 +304,7 @@ async fn login_and_get_token(email: String, password: String) -> Result<serde_js
     println!("[AUTH] Login successful, generating token...");
 
     let token_response = client
-        .post("http://localhost:3000/api/tokens/generate")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/tokens/generate")
         .header("Authorization", format!("Bearer {}", session_token))
         .json(&serde_json::json!({
             "deviceName": "Langra Desktop"
@@ -337,7 +337,7 @@ async fn signup_and_get_token(email: String, password: String) -> Result<serde_j
     let client = reqwest::Client::new();
 
     let signup_response = client
-        .post("http://localhost:3000/api/auth/signup")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/auth/signup")
         .json(&serde_json::json!({
             "email": email,
             "password": password
@@ -362,7 +362,7 @@ async fn signup_and_get_token(email: String, password: String) -> Result<serde_j
     println!("[AUTH] Signup successful, generating token...");
 
     let token_response = client
-        .post("http://localhost:3000/api/tokens/generate")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/tokens/generate")
         .header("Authorization", format!("Bearer {}", session_token))
         .json(&serde_json::json!({
             "deviceName": "Langra Desktop"
@@ -393,7 +393,7 @@ fn oauth_login(provider: String) -> Result<serde_json::Value, String> {
     println!("[AUTH] Starting OAuth with provider: {}", provider);
 
     let auth_url = format!(
-        "http://localhost:3000/api/auth/oauth?provider={}",
+        "https://white-bush-0ea25dc03.3.azurestaticapps.net/api/auth/oauth?provider={}",
         provider
     );
 

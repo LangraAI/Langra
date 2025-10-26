@@ -8,7 +8,7 @@ pub async fn detect_language(text: &str) -> Result<String> {
 
     let client = reqwest::Client::new();
     let response = client
-        .post("http://localhost:3000/api/detect-language")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/detect-language")
         .header("Authorization", format!("Bearer {}", token))
         .json(&serde_json::json!({
             "text": text,

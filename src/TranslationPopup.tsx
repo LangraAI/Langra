@@ -315,7 +315,7 @@ export function TranslationPopup({
                         console.error("[POPUP] Logout failed:", error);
                       }
                     } else {
-                      window.open("https://langra.de/auth", "_blank");
+                      window.open("https://white-bush-0ea25dc03.3.azurestaticapps.net/auth", "_blank");
                     }
                   }}
                   sx={{

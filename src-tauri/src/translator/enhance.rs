@@ -16,7 +16,7 @@ async fn enhance_with_backend_api(text: &str, language: &str, instruction: Optio
     }
 
     let response = client
-        .post("http://localhost:3000/api/enhance")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/enhance")
         .header("Authorization", format!("Bearer {}", token))
         .json(&json_body)
         .send()

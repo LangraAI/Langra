@@ -116,7 +116,7 @@ pub async fn save_api_keys(api_settings: ApiKeySettings) -> Result<(), String> {
     };
 
     let response = client
-        .post("http://localhost:3000/api/credentials")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/credentials")
         .header("Authorization", format!("Bearer {}", token))
         .json(&json_body)
         .send()

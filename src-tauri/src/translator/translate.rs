@@ -13,7 +13,7 @@ pub async fn translate_stream(text: &str, source_lang: &str, app: &AppHandle) ->
 
     let client = reqwest::Client::new();
     let response = client
-        .post("http://localhost:3000/api/translate")
+        .post("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/translate")
         .header("Authorization", format!("Bearer {}", token))
         .json(&serde_json::json!({
             "text": text,

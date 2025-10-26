@@ -95,7 +95,7 @@ export function LoginDialog({ open, onClose, onLoginSuccess }: LoginDialogProps)
 
   const handleSignupClick = async () => {
     try {
-      await invoke("open_url", { url: "https://langra.de/signup" });
+      await invoke("open_url", { url: "https://white-bush-0ea25dc03.3.azurestaticapps.net/signup" });
     } catch (error) {
       console.error("Failed to open signup page:", error);
     }
