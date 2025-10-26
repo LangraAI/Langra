@@ -469,8 +469,17 @@ pub async fn trigger_translation(app: &AppHandle) {
     if !selected_text.is_empty() {
         println!("[TRIGGER] Translating text: '{}'", selected_text);
 
-        let lang = "en".to_string();
-        println!("[TRIGGER] Using default language: {}", lang);
+        // Detect the language of the selected text
+        let lang = match translator::detect_language(&selected_text).await {
+            Ok(detected_lang) => {
+                println!("[TRIGGER] Detected language: {}", detected_lang);
+                detected_lang
+            },
+            Err(e) => {
+                println!("[TRIGGER] Language detection failed: {:?}, falling back to 'en'", e);
+                "en".to_string()
+            }
+        };
 
         #[derive(serde::Serialize, Clone)]
         struct TranslationStartPayload {
@@ -583,6 +592,22 @@ async fn enhance_text(text: String, language: String) {
     }
 }
 
+#[tauri::command]
+async fn detect_language(text: String) -> Result<String, String> {
+    println!("[DETECT_LANG_CMD] Detecting language for text (first 100 chars): '{}'", &text[..text.len().min(100)]);
+
+    match translator::detect_language(&text).await {
+        Ok(lang) => {
+            println!("[DETECT_LANG_CMD] Detected language: {}", lang);
+            Ok(lang)
+        }
+        Err(e) => {
+            println!("[DETECT_LANG_CMD] Detection failed: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     dotenvy::dotenv().ok();
@@ -676,6 +701,7 @@ pub fn run() {
             enhance_text,
             set_mode,
             get_mode,
+            detect_language,
             insertion::insert_translation_into_previous_input,
             windows::hide_translator_window,
             windows::set_always_on_top,
