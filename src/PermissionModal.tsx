@@ -28,18 +28,15 @@ export function PermissionModal() {
   const handleGrantPermission = async () => {
     try {
       setIsChecking(true);
-      console.log("[PERMISSIONS] Requesting permission...");
+      console.log("[PERMISSIONS] Opening System Settings...");
 
-      // Request permission (this will show system dialog and open System Settings)
-      await invoke("request_input_monitoring_permission");
-
-      // Open System Settings
+      // Open System Settings directly (skip the system dialog)
       await invoke("open_input_monitoring_settings");
 
       // Move to waiting step
       setStep("waiting");
     } catch (error) {
-      console.error("[PERMISSIONS] Error requesting permission:", error);
+      console.error("[PERMISSIONS] Error opening settings:", error);
     } finally {
       setIsChecking(false);
     }
