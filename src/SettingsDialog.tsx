@@ -65,23 +65,6 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     }
   };
 
-  const handleSaveStyle = async () => {
-    console.log("[SETTINGS] Saving style:", settings);
-    setSaveStatus("saving");
-    setErrorMessage("");
-
-    try {
-      await invoke("save_settings", { settings });
-      console.log("[SETTINGS] Style saved successfully");
-      setSaveStatus("idle");
-      onClose(false);
-    } catch (error) {
-      console.error("[SETTINGS] Save failed:", error);
-      setSaveStatus("error");
-      setErrorMessage(String(error));
-    }
-  };
-
   const handleSaveApiKeys = async () => {
     console.log("[SETTINGS] Saving API keys:", apiSettings);
     setSaveStatus("saving");

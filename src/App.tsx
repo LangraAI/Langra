@@ -39,7 +39,7 @@ function App() {
         console.log("[FRONTEND] Checking if user is logged in...");
 
         try {
-          const accessToken = await invoke<string>("get_access_token");
+          await invoke<string>("get_access_token");
           console.log("[FRONTEND] User is logged in, app ready");
         } catch (err) {
           console.log("[FRONTEND] No access token found, showing welcome screen");
@@ -73,7 +73,7 @@ function App() {
             "Then:\n" +
             "1. Click the lock and enter your password\n" +
             "2. Click the + button\n" +
-            "3. Navigate to /Applications/Langra.app\n" +
+            "3. Navigate to /Applications/Langra.de\n" +
             "4. Toggle it ON\n" +
             "5. Restart Langra"
           )) {
