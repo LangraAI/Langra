@@ -109,9 +109,9 @@ export function WelcomeScreen({ onLoginSuccess }: WelcomeScreenProps) {
             lineHeight: 1.5,
           }}
         >
-          Free tier with 10,000 characters/month
+          Free tier: 250,000 characters/month
           <br />
-          Or bring your own API key for unlimited usage
+          Up to 64K per translation. BYOK for unlimited.
         </Typography>
       </Box>
 

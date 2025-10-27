@@ -123,10 +123,17 @@ function App() {
           console.log("[FRONTEND] Received partial text:", event.payload.substring(0, 50) + "...");
           setPopup((prev) => {
             console.log("[FRONTEND] Updating popup state with partial text");
+            // Calculate progress based on text length
+            // Assume translation will be ~1.2x the original text length
+            const estimatedLength = prev.originalText.length * 1.2;
+            const currentLength = event.payload.length;
+            const calculatedProgress = Math.min(95, Math.floor((currentLength / estimatedLength) * 100));
+
             return {
               ...prev,
               text: event.payload,
               isStreaming: true,
+              progress: calculatedProgress,
             };
           });
         });
@@ -136,10 +143,16 @@ function App() {
           console.log("[FRONTEND] Received enhancement partial text:", event.payload.substring(0, 50) + "...");
           setPopup((prev) => {
             console.log("[FRONTEND] Updating popup state with enhancement partial text");
+            // Calculate progress based on text length
+            const estimatedLength = prev.originalText.length * 1.2;
+            const currentLength = event.payload.length;
+            const calculatedProgress = Math.min(95, Math.floor((currentLength / estimatedLength) * 100));
+
             return {
               ...prev,
               text: event.payload,
               isStreaming: true,
+              progress: calculatedProgress,
             };
           });
         });
@@ -157,7 +170,7 @@ function App() {
 
         const unlistenComplete = await currentWindow.listen("translation-complete", () => {
           console.log("[FRONTEND] Translation complete");
-          setPopup((prev) => ({ ...prev, isStreaming: false }));
+          setPopup((prev) => ({ ...prev, isStreaming: false, progress: 100 }));
         });
         unlistenFns.push(unlistenComplete);
 
