@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run checks but don't block commits (exit 0 regardless)
+# Once codebase is clean, remove "|| true" to enforce
+
+npm run lint || true
+npm run format:check || true
+npm run format:rust:check || true
+
+echo "⚠️  Pre-commit checks completed (non-blocking mode)"
+echo "Fix any issues above before pushing to ensure CI passes"

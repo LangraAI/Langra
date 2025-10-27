@@ -3,13 +3,23 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:rust": "cd src-tauri && cargo fmt",
+    "format:rust:check": "cd src-tauri && cargo fmt --check",
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -22,13 +32,22 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.6.2",
+    "@commitlint/config-conventional": "^19.6.2",
     "@tailwindcss/postcss": "^4.1.15",
     "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.21",
+    "eslint": "^9.20.0",
+    "eslint-plugin-react": "^7.42.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "husky": "^9.2.2",
     "postcss": "^8.5.6",
+    "prettier": "^3.5.3",
     "tailwindcss": "^4.1.15",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
