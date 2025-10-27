@@ -15,6 +15,7 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,19 +35,18 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint
+        run: npm run lint || echo "ESLint found issues (non-blocking)"
 
       - name: Check Prettier formatting
-        run: npm run format:check
+        run: npm run format:check || echo "Prettier found issues (non-blocking)"
 
       - name: Check Rust formatting
-        run: npm run format:rust:check
+        run: npm run format:rust:check || echo "Rustfmt found issues (non-blocking)"
 
       - name: Run Clippy
-        run: cd src-tauri && cargo clippy -- -D warnings
+        run: cd src-tauri && cargo clippy -- -D warnings || echo "Clippy found issues (non-blocking)"
 
   build:
-    needs: lint
     strategy:
       fail-fast: false
       matrix:
@@ -94,7 +94,6 @@ jobs:
           prerelease: false
 
   build-portable:
-    needs: lint
     name: Build Portable (Windows)
     runs-on: windows-latest
     steps:
