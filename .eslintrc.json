@@ -2,8 +2,10 @@
   "root": true,
   "env": {
     "browser": true,
-    "es2021": true
+    "es2021": true,
+    "node": true
   },
+  "ignorePatterns": ["dist", "node_modules", "*.config.js", "*.config.cjs", "src-tauri/target"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
