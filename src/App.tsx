@@ -323,7 +323,7 @@ function App() {
   }, []);
 
   return (
-    <div className="w-full h-screen" style={{ background: "#1a1a1a" }}>
+    <div style={{ width: "100%", height: "100vh", background: "#1a1a1a" }}>
       {showPermissionModal ? (
         <PermissionModal />
       ) : showSuccess ? (
