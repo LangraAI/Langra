@@ -47,6 +47,8 @@ jobs:
         run: cd src-tauri && cargo clippy -- -D warnings || echo "Clippy found issues (non-blocking)"
 
   build:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -92,7 +94,7 @@ jobs:
           releaseBody: ${{ startsWith(github.ref, 'refs/tags/') && 'See the assets to download and install this version.' || '' }}
           releaseDraft: false
           prerelease: false
-          updaterJsonPath: ${{ startsWith(github.ref, 'refs/tags/') && 'latest.json' || '' }}
+          includeUpdaterJson: ${{ startsWith(github.ref, 'refs/tags/') }}
           updaterJsonKeepUniversal: true
 
   build-portable:
