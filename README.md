@@ -2,13 +2,13 @@
 
 # Langra
 
-**Translation and text enhancement desktop application**
+**Instant translation and text enhancement for your desktop**
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/USERNAME/langra/build.yml?branch=main)](https://github.com/USERNAME/langra/actions)
-[![License](https://img.shields.io/github/license/USERNAME/langra)](LICENSE)
-[![Version](https://img.shields.io/github/v/release/USERNAME/langra)](https://github.com/USERNAME/langra/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/ghaithalmasri/langra/build.yml?branch=main)](https://github.com/ghaithalmasri/langra/actions)
+[![License](https://img.shields.io/github/license/ghaithalmasri/langra)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/ghaithalmasri/langra)](https://github.com/ghaithalmasri/langra/releases)
 
-[Features](#features) · [Installation](#installation) · [Documentation](#documentation) · [Contributing](#contributing)
+[Download](#installation) · [Features](#features) · [Documentation](./docs/) · [Contributing](./CONTRIBUTING.md)
 
 </div>
 
@@ -16,135 +16,87 @@
 
 ## About
 
-Langra is a lightweight desktop application for translation and text enhancement. Built with Tauri for performance and cross-platform compatibility.
+Langra is a lightweight desktop translation tool. Press **Cmd+C+C** to instantly translate selected text or enhance your writing with AI.
 
 ## Features
 
-- Real-time translation
-- Text enhancement capabilities
-- Keyboard shortcut support
-- Multiple display modes (popup/window)
-- Active window detection
-- Cross-platform support (Windows, macOS, Linux)
-
-## Tech Stack
-
-- **Frontend**: React 19, TypeScript, Material-UI, Tailwind CSS
-- **Backend**: Rust, Tauri 2.0
-- **Build**: Vite 7, TypeScript 5.8
+- ⚡ Instant translation with **Cmd+C+C** keyboard shortcut
+- 🎨 Two display modes: popup and full window
+- 🌍 Cross-platform support (Windows, macOS, Linux)
+- 🔄 Auto-update functionality
+- 🔐 Privacy-first: runs locally on your device
 
 ## Installation
 
-### Download
+Download the latest release for your platform:
 
-Pre-built binaries are available for:
-- **Windows**: MSI and NSIS installers
-- **macOS**: DMG installer
-- **Linux**: AppImage and DEB packages
+- **macOS**: [Apple Silicon](https://github.com/ghaithalmasri/langra/releases/latest/download/Langra_aarch64.dmg) | [Intel](https://github.com/ghaithalmasri/langra/releases/latest/download/Langra_x64.dmg)
+- **Windows**: [Installer](https://github.com/ghaithalmasri/langra/releases/latest/download/Langra_x64-setup.exe)
+- **Linux**: [AppImage](https://github.com/ghaithalmasri/langra/releases/latest/download/langra_amd64.AppImage) | [DEB](https://github.com/ghaithalmasri/langra/releases/latest/download/langra_amd64.deb)
 
-Download the latest release from the [Releases](../../releases) page.
+Or visit the [Releases](../../releases) page for all available downloads.
+
+## Quick Start
+
+1. Launch Langra
+2. Select any text
+3. Press **Cmd+C+C** (or **Ctrl+C+C** on Windows/Linux)
+4. Translation appears instantly
+
+## Tech Stack
+
+- **Frontend**: React 19, TypeScript, Material-UI
+- **Backend**: Rust, Tauri 2.0
+- **Build**: Vite 7
+
+## Development
+
+### Prerequisites
+
+- Node.js 22.12.0+
+- Rust (latest stable)
 
 ### Build from Source
 
-**Prerequisites:**
-- Node.js 22.12.0 or higher
-- Rust (latest stable)
-
-**Steps:**
-
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/ghaithalmasri/langra.git
 cd langra
 
 # Install dependencies
 npm install
 
-# Development build
+# Run in development mode
 npm run tauri:dev
 
-# Production build
+# Build production app
 npm run tauri:build
 ```
 
 See [docs/BUILDING.md](./docs/BUILDING.md) for detailed instructions.
 
-## Usage
-
-1. Launch the application
-2. Configure keyboard shortcuts in settings
-3. Select text and use shortcuts for translation/enhancement
-4. View results in popup or window mode
-
 ## Documentation
 
-- [Building Guide](./docs/BUILDING.md) - Build instructions for all platforms
-- [Code Style Guide](./CODE_STYLE.md) - Coding standards and rules
-- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
-- [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues and solutions
-- [CI/CD](./docs/CICD.md) - Automated build workflow
-
-## Development
-
-### Project Structure
-
-```
-langra/
-├── src/                    # React frontend
-├── src-tauri/             # Rust backend
-├── docs/                  # Documentation
-├── .github/workflows/     # CI/CD
-└── public/                # Static assets
-```
-
-### Available Commands
-
-```bash
-npm run dev          # Start Vite dev server
-npm run build        # Build frontend
-npm run tauri:dev    # Run app in development
-npm run tauri:build  # Build production app
-```
+- [Building Guide](./docs/BUILDING.md) - Build instructions
+- [Code Style](./docs/CODE_STYLE.md) - Coding standards
+- [Contributing](./CONTRIBUTING.md) - How to contribute
+- [Release Guide](./docs/RELEASE.md) - Creating releases
+- [CI/CD](./docs/CICD.md) - Automated builds
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting pull requests.
-
-### Quick Start
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-See the contributing guide for detailed guidelines.
-
-## Changelog
-
-See [CHANGELOG.md](./CHANGELOG.md) for version history and release notes.
+Contributions are welcome! Please read the [contributing guide](./CONTRIBUTING.md) before submitting pull requests.
 
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-## Acknowledgments
-
-Built with:
-- [Tauri](https://tauri.app/) - Desktop application framework
-- [React](https://react.dev/) - UI framework
-- [Material-UI](https://mui.com/) - Component library
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
-
-## Support
-
-- Check [documentation](./docs/) for guides
-- Search [existing issues](../../issues) before creating new ones
-- Open an [issue](../../issues/new) for bugs or feature requests
-
 ---
 
 <div align="center">
 
-**[Website](#) · [Documentation](./docs/) · [Report Bug](../../issues) · [Request Feature](../../issues)**
+Built with [Tauri](https://tauri.app/) · [React](https://react.dev/) · [Material-UI](https://mui.com/)
+
+[Report Bug](../../issues) · [Request Feature](../../issues)
 
 </div>

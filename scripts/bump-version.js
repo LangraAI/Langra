@@ -98,36 +98,18 @@ let changelog = fs.readFileSync(changelogPath, 'utf8');
 
 const today = new Date().toISOString().split('T')[0];
 
-// Check if there's an [Unreleased] section to move
-if (changelog.includes('## [Unreleased]')) {
-  // Add new version section after Unreleased
-  const unreleasedIndex = changelog.indexOf('## [Unreleased]');
-  const nextSectionIndex = changelog.indexOf('\n## ', unreleasedIndex + 1);
+// Add new version section at the top (after "# Changelog")
+const newSection = `\n## [${newVersion}] - ${today}\n\n- Update release notes here\n`;
 
-  const newSection = `\n## [${newVersion}] - ${today}\n`;
-
-  if (nextSectionIndex !== -1) {
-    changelog = changelog.slice(0, nextSectionIndex) + newSection + changelog.slice(nextSectionIndex);
-  } else {
-    changelog += newSection;
-  }
-
-  // Update version comparison links at the bottom
-  const linksSection = changelog.match(/\[Unreleased\]:.*\n/);
-  if (linksSection) {
-    const oldLink = linksSection[0];
-    const repoUrl = oldLink.match(/https:\/\/github\.com\/[^\/]+\/[^\/]+/)?.[0];
-
-    if (repoUrl) {
-      const newLinks = `[Unreleased]: ${repoUrl}/compare/v${newVersion}...HEAD\n[${newVersion}]: ${repoUrl}/releases/tag/v${newVersion}\n`;
-      changelog = changelog.replace(oldLink, newLinks);
-    }
-  }
-
+// Find the position after the title
+const titleIndex = changelog.indexOf('# Changelog');
+if (titleIndex !== -1) {
+  const insertPosition = changelog.indexOf('\n', titleIndex) + 1;
+  changelog = changelog.slice(0, insertPosition) + newSection + changelog.slice(insertPosition);
   fs.writeFileSync(changelogPath, changelog);
   console.log('   ✅ CHANGELOG.md updated');
 } else {
-  console.log('   ⚠️  No [Unreleased] section found in CHANGELOG.md - skipped');
+  console.log('   ⚠️  Could not update CHANGELOG.md');
 }
 
 console.log(`\n✨ Version bumped successfully: ${currentVersion} → ${newVersion}`);
