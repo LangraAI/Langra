@@ -19,6 +19,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:rust": "cd src-tauri && cargo fmt",
     "format:rust:check": "cd src-tauri && cargo fmt --check",
+    "version:bump": "node scripts/bump-version.js",
     "prepare": "husky || true"
   },
   "dependencies": {

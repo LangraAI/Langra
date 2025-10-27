@@ -9,7 +9,7 @@ import { SettingsDialog } from "./SettingsDialog";
 import { PermissionModal } from "./PermissionModal";
 
 function App() {
-  const [viewMode, setViewMode] = useState<"popup" | "normal">("normal");
+  const [viewMode, setViewMode] = useState<"popup" | "normal">("popup");
   const [popup, setPopup] = useState({
     isOpen: false,
     text: "",
@@ -332,7 +332,7 @@ function App() {
         <WelcomeScreen
           onLoginSuccess={handleLoginSuccess}
         />
-      ) : viewMode === "popup" && popup.isOpen ? (
+      ) : viewMode === "popup" ? (
         <TranslationPopup
           translation={popup.text}
           isOpen={popup.isOpen}

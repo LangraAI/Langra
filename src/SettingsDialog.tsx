@@ -7,10 +7,6 @@ interface SettingsDialogProps {
   onClose: (credentialsSaved?: boolean) => void;
 }
 
-interface Settings {
-  style: "formal" | "friendly" | "casual";
-}
-
 interface ApiKeySettings {
   provider: "openai" | "azure";
   openai_api_key: string;
@@ -20,9 +16,6 @@ interface ApiKeySettings {
 }
 
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
-  const [settings, setSettings] = useState<Settings>({
-    style: "friendly",
-  });
   const [apiSettings, setApiSettings] = useState<ApiKeySettings>({
     provider: "azure",
     openai_api_key: "",
@@ -44,24 +37,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
   const loadSettings = async () => {
     try {
-      const loadedSettings = await invoke<Settings>("get_settings");
-      setSettings(loadedSettings);
-
-      try {
-        const response = await fetch("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/credentials/check", {
-          headers: {
-            "Authorization": `Bearer ${await invoke<string>("get_access_token")}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setHasCredentials(data.has_credentials);
-        }
-      } catch (err) {
-        console.log("[SETTINGS] Could not check BYOK status:", err);
+      const response = await fetch("https://white-bush-0ea25dc03.3.azurestaticapps.net/api/credentials/check", {
+        headers: {
+          "Authorization": `Bearer ${await invoke<string>("get_access_token")}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setHasCredentials(data.has_credentials);
       }
-    } catch (error) {
-      console.error("Failed to load settings:", error);
+    } catch (err) {
+      console.log("[SETTINGS] Could not check BYOK status:", err);
     }
   };
 
@@ -131,84 +117,37 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       }}
     >
       <DialogTitle sx={{
-        borderBottom: "1px solid #333333",
-        padding: "16px 20px",
-        fontSize: "0.95rem",
+        borderBottom: "1px solid #333",
+        padding: "12px 16px",
+        fontSize: "18px",
         fontWeight: 500,
+        color: "#e0e0e0",
       }}>
-        Settings
+        API Keys
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 2.5, pb: 2, px: 2.5 }}>
-        <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
-          <FormLabel component="legend" sx={{
-            color: "#b3b3b3",
-            mb: 1,
-            fontSize: "0.8rem",
-            fontWeight: 500,
-          }}>
-            Translation Style
-          </FormLabel>
-          <RadioGroup
-            value={settings.style}
-            onChange={(e) => setSettings({ ...settings, style: e.target.value as any })}
-            row
-            sx={{ gap: 1 }}
-          >
-            <FormControlLabel
-              value="formal"
-              label="Formal"
-              control={<Radio size="small" sx={{ color: "#64b5f6", "&.Mui-checked": { color: "#64b5f6" } }} />}
-              sx={{
-                mr: 1,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: "0.875rem",
-                  fontWeight: 400,
-                }
-              }}
-            />
-            <FormControlLabel
-              value="friendly"
-              label="Friendly"
-              control={<Radio size="small" sx={{ color: "#64b5f6", "&.Mui-checked": { color: "#64b5f6" } }} />}
-              sx={{
-                mr: 1,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: "0.875rem",
-                  fontWeight: 400,
-                }
-              }}
-            />
-            <FormControlLabel
-              value="casual"
-              label="Casual"
-              control={<Radio size="small" sx={{ color: "#64b5f6", "&.Mui-checked": { color: "#64b5f6" } }} />}
-              sx={{
-                mr: 1,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: "0.875rem",
-                  fontWeight: 400,
-                }
-              }}
-            />
-          </RadioGroup>
-        </FormControl>
+      <DialogContent sx={{ pt: "20px", pb: "16px", px: "16px" }}>
+        <Typography sx={{
+          color: "#888",
+          mb: "12px",
+          fontSize: "11px",
+          fontWeight: 500,
+          textTransform: "uppercase",
+          letterSpacing: "0.5px",
+        }}>
+          Bring Your Own Key (BYOK)
+        </Typography>
 
-        <Box sx={{ borderTop: "1px solid #333333", pt: 2.5 }}>
-          <Typography variant="body2" sx={{ color: "#b3b3b3", mb: 1.5, fontSize: "0.8rem", fontWeight: 500 }}>
-            API Keys (BYOK)
-          </Typography>
-
-          {hasCredentials && !showApiKeyForm ? (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        {hasCredentials && !showApiKeyForm ? (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <Alert severity="success" sx={{
                 backgroundColor: "#1e4620",
                 padding: "8px 12px",
                 "& .MuiAlert-icon": {
-                  fontSize: "18px",
+                  fontSize: "16px",
                 }
               }}>
-                <Typography variant="body2" sx={{ color: "#90ee90", fontSize: "0.8rem" }}>
+                <Typography sx={{ color: "#90ee90", fontSize: "11px", fontWeight: 400 }}>
                   Using your own API keys (unlimited usage)
                 </Typography>
               </Alert>
@@ -217,15 +156,14 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 variant="outlined"
                 color="error"
                 fullWidth
-                size="small"
                 onClick={handleDeleteCredentials}
                 sx={{
                   borderColor: "#f44336",
                   color: "#f44336",
                   textTransform: "none",
                   fontWeight: 500,
-                  fontSize: "0.875rem",
-                  py: 0.75,
+                  fontSize: "13px",
+                  height: "28px",
                   "&:hover": {
                     borderColor: "#d32f2f",
                     backgroundColor: "rgba(244, 67, 54, 0.08)",
@@ -236,15 +174,15 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               </Button>
             </Box>
           ) : !showApiKeyForm ? (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <Alert severity="info" sx={{
                 backgroundColor: "#1e3a5f",
                 padding: "8px 12px",
                 "& .MuiAlert-icon": {
-                  fontSize: "18px",
+                  fontSize: "16px",
                 }
               }}>
-                <Typography variant="body2" sx={{ color: "#90caf9", fontSize: "0.8rem" }}>
+                <Typography sx={{ color: "#90caf9", fontSize: "11px", fontWeight: 400 }}>
                   Currently using Langra's free tier
                 </Typography>
               </Alert>
@@ -252,17 +190,16 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               <Button
                 variant="outlined"
                 fullWidth
-                size="small"
                 onClick={() => setShowApiKeyForm(true)}
                 sx={{
                   borderColor: "#64b5f6",
                   color: "#64b5f6",
                   textTransform: "none",
                   fontWeight: 500,
-                  fontSize: "0.875rem",
-                  py: 0.75,
+                  fontSize: "13px",
+                  height: "28px",
                   "&:hover": {
-                    borderColor: "#42a5f5",
+                    borderColor: "#5aa3e0",
                     backgroundColor: "rgba(100, 181, 246, 0.08)",
                   },
                 }}
@@ -270,25 +207,27 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 Add Your Own API Keys
               </Button>
 
-              <Typography variant="caption" sx={{ color: "#808080", textAlign: "center", fontSize: "0.7rem" }}>
+              <Typography sx={{ color: "#666", textAlign: "center", fontSize: "11px", fontWeight: 400 }}>
                 Get unlimited usage with your own OpenAI or Azure keys
               </Typography>
             </Box>
           ) : (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <FormControl component="fieldset" fullWidth>
                 <FormLabel component="legend" sx={{
-                  color: "#b3b3b3",
-                  mb: 1,
-                  fontSize: "0.75rem",
+                  color: "#888",
+                  mb: "12px",
+                  fontSize: "11px",
                   fontWeight: 500,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
                 }}>
                   Provider
                 </FormLabel>
                 <RadioGroup
                   value={apiSettings.provider}
                   onChange={handleProviderChange}
-                  sx={{ gap: 0.5 }}
+                  sx={{ gap: "6px" }}
                 >
                   <FormControlLabel
                     value="azure"
@@ -296,8 +235,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     control={<Radio size="small" sx={{ color: "#64b5f6", "&.Mui-checked": { color: "#64b5f6" } }} />}
                     sx={{
                       "& .MuiFormControlLabel-label": {
-                        fontSize: "0.875rem",
+                        fontSize: "13px",
                         fontWeight: 400,
+                        color: "#e0e0e0",
                       }
                     }}
                   />
@@ -307,8 +247,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     control={<Radio size="small" sx={{ color: "#64b5f6", "&.Mui-checked": { color: "#64b5f6" } }} />}
                     sx={{
                       "& .MuiFormControlLabel-label": {
-                        fontSize: "0.875rem",
+                        fontSize: "13px",
                         fontWeight: 400,
+                        color: "#e0e0e0",
                       }
                     }}
                   />
@@ -316,7 +257,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               </FormControl>
 
               {apiSettings.provider === "azure" ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <TextField
                     label="Endpoint"
                     value={apiSettings.azure_endpoint}
@@ -325,18 +266,21 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     fullWidth
                     size="small"
                     InputLabelProps={{ sx: {
-                      color: "#b3b3b3",
-                      fontSize: "0.875rem",
+                      color: "#888",
+                      fontSize: "13px",
                     }}}
                     InputProps={{
                       sx: {
-                        fontSize: "0.875rem",
+                        fontSize: "13px",
                         color: "#e0e0e0",
                         backgroundColor: "#1a1a1a",
-                        "& fieldset": { borderColor: "#4a4a4a" },
-                        "&:hover fieldset": { borderColor: "#64b5f6" },
-                        "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                        "& fieldset": { borderColor: "#2a2a2a" },
+                        "&:hover fieldset": { borderColor: "#444" },
+                        "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
                       }
+                    }}
+                    slotProps={{
+                      inputLabel: { shrink: true }
                     }}
                   />
                   <TextField
@@ -348,18 +292,21 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     fullWidth
                     size="small"
                     InputLabelProps={{ sx: {
-                      color: "#b3b3b3",
-                      fontSize: "0.875rem",
+                      color: "#888",
+                      fontSize: "13px",
                     }}}
                     InputProps={{
                       sx: {
-                        fontSize: "0.875rem",
+                        fontSize: "13px",
                         color: "#e0e0e0",
                         backgroundColor: "#1a1a1a",
-                        "& fieldset": { borderColor: "#4a4a4a" },
-                        "&:hover fieldset": { borderColor: "#64b5f6" },
-                        "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                        "& fieldset": { borderColor: "#2a2a2a" },
+                        "&:hover fieldset": { borderColor: "#444" },
+                        "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
                       }
+                    }}
+                    slotProps={{
+                      inputLabel: { shrink: true }
                     }}
                   />
                   <TextField
@@ -370,23 +317,26 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     fullWidth
                     size="small"
                     InputLabelProps={{ sx: {
-                      color: "#b3b3b3",
-                      fontSize: "0.875rem",
+                      color: "#888",
+                      fontSize: "13px",
                     }}}
                     InputProps={{
                       sx: {
-                        fontSize: "0.875rem",
+                        fontSize: "13px",
                         color: "#e0e0e0",
                         backgroundColor: "#1a1a1a",
-                        "& fieldset": { borderColor: "#4a4a4a" },
-                        "&:hover fieldset": { borderColor: "#64b5f6" },
-                        "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                        "& fieldset": { borderColor: "#2a2a2a" },
+                        "&:hover fieldset": { borderColor: "#444" },
+                        "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
                       }
+                    }}
+                    slotProps={{
+                      inputLabel: { shrink: true }
                     }}
                   />
                 </Box>
               ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <TextField
                     label="API Key"
                     value={apiSettings.openai_api_key}
@@ -396,36 +346,38 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     fullWidth
                     size="small"
                     InputLabelProps={{ sx: {
-                      color: "#b3b3b3",
-                      fontSize: "0.875rem",
+                      color: "#888",
+                      fontSize: "13px",
                     }}}
                     InputProps={{
                       sx: {
-                        fontSize: "0.875rem",
+                        fontSize: "13px",
                         color: "#e0e0e0",
                         backgroundColor: "#1a1a1a",
-                        "& fieldset": { borderColor: "#4a4a4a" },
-                        "&:hover fieldset": { borderColor: "#64b5f6" },
-                        "&.Mui-focused fieldset": { borderColor: "#64b5f6" },
+                        "& fieldset": { borderColor: "#2a2a2a" },
+                        "&:hover fieldset": { borderColor: "#444" },
+                        "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
                       }
                     }}
+                    slotProps={{
+                      inputLabel: { shrink: true }
+                    }}
                   />
-                  <Typography variant="caption" sx={{ color: "#808080", fontSize: "0.7rem", mt: -0.5 }}>
+                  <Typography sx={{ color: "#666", fontSize: "11px", fontWeight: 400 }}>
                     Get your key from platform.openai.com
                   </Typography>
                 </Box>
               )}
             </Box>
           )}
-        </Box>
 
         {saveStatus === "error" && (
           <Alert severity="error" sx={{
-            mt: 2,
+            mt: "16px",
             padding: "8px 12px",
-            fontSize: "0.8rem",
+            fontSize: "11px",
             "& .MuiAlert-icon": {
-              fontSize: "18px",
+              fontSize: "16px",
             }
           }}>
             {errorMessage || "Failed to save settings"}
@@ -433,19 +385,19 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         )}
       </DialogContent>
 
-      <DialogActions sx={{ borderTop: "1px solid #333333", padding: "12px 16px" }}>
+      <DialogActions sx={{ borderTop: "1px solid #333", padding: "12px 16px", gap: "12px" }}>
         <Button
           onClick={handleDialogClose}
-          size="small"
           sx={{
-            color: "#b3b3b3",
+            color: "#888",
             textTransform: "none",
-            fontSize: "0.875rem",
+            fontSize: "13px",
             fontWeight: 500,
-            minWidth: 64,
-            height: 36,
+            minWidth: "64px",
+            height: "28px",
+            padding: "4px 12px",
             "&:hover": {
-              backgroundColor: "#333333",
+              backgroundColor: "#2a2a2a",
             },
           }}
         >
@@ -455,18 +407,22 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           <Button
             onClick={handleSaveApiKeys}
             variant="contained"
-            size="small"
             disabled={saveStatus === "saving"}
             disableElevation
             sx={{
               backgroundColor: "#64b5f6",
               color: "#000",
               textTransform: "none",
-              fontSize: "0.875rem",
+              fontSize: "13px",
               fontWeight: 500,
-              minWidth: 64,
-              height: 36,
-              "&:hover": { backgroundColor: "#42a5f5" }
+              minWidth: "100px",
+              height: "28px",
+              padding: "4px 12px",
+              "&:hover": { backgroundColor: "#5aa3e0" },
+              "&.Mui-disabled": {
+                backgroundColor: "#222",
+                color: "#555",
+              },
             }}
           >
             {saveStatus === "saving" ? "Saving..." : "Save API Keys"}

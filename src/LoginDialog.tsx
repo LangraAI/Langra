@@ -102,37 +102,85 @@ export function LoginDialog({ open, onClose, onLoginSuccess }: LoginDialogProps)
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 600 }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          background: "#242424",
+          color: "#e0e0e0",
+        }
+      }}
+    >
+      <DialogTitle sx={{
+        borderBottom: "1px solid #333",
+        padding: "12px 16px",
+        fontSize: "18px",
+        fontWeight: 500,
+        color: "#e0e0e0",
+      }}>
         Sign In to Langra
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ pt: "20px", pb: "16px", px: "16px" }}>
         <form onSubmit={handleLogin}>
-          <Stack spacing={3} sx={{ mt: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+          <Stack spacing="16px">
+            <Typography sx={{ fontSize: "13px", color: "#888", fontWeight: 400 }}>
               Sign in with your Langra account
             </Typography>
 
             {error && (
-              <Alert severity="error" onClose={() => setError(null)}>
+              <Alert
+                severity="error"
+                onClose={() => setError(null)}
+                sx={{
+                  fontSize: "11px",
+                  padding: "8px 12px",
+                  "& .MuiAlert-icon": { fontSize: "16px" },
+                }}
+              >
                 {error}
               </Alert>
             )}
 
             {info && (
-              <Alert severity="info" onClose={() => setInfo(null)}>
+              <Alert
+                severity="info"
+                onClose={() => setInfo(null)}
+                sx={{
+                  fontSize: "11px",
+                  padding: "8px 12px",
+                  "& .MuiAlert-icon": { fontSize: "16px" },
+                }}
+              >
                 {info}
               </Alert>
             )}
 
-            <Stack spacing={2}>
+            <Stack spacing="12px">
               <Button
                 variant="outlined"
                 fullWidth
-                startIcon={<GoogleIcon />}
+                startIcon={<GoogleIcon sx={{ fontSize: 16 }} />}
                 onClick={handleGoogleAuth}
                 disabled={loading}
-                sx={{ textTransform: "none", py: 1.5 }}
+                sx={{
+                  textTransform: "none",
+                  height: "36px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  borderColor: "#64b5f6",
+                  color: "#64b5f6",
+                  "&:hover": {
+                    borderColor: "#5aa3e0",
+                    backgroundColor: "rgba(100, 181, 246, 0.08)",
+                  },
+                  "&.Mui-disabled": {
+                    borderColor: "#333",
+                    color: "#555",
+                  },
+                }}
               >
                 Continue with Google
               </Button>
@@ -140,17 +188,32 @@ export function LoginDialog({ open, onClose, onLoginSuccess }: LoginDialogProps)
               <Button
                 variant="outlined"
                 fullWidth
-                startIcon={<GitHubIcon />}
+                startIcon={<GitHubIcon sx={{ fontSize: 16 }} />}
                 onClick={handleGitHubAuth}
                 disabled={loading}
-                sx={{ textTransform: "none", py: 1.5 }}
+                sx={{
+                  textTransform: "none",
+                  height: "36px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  borderColor: "#64b5f6",
+                  color: "#64b5f6",
+                  "&:hover": {
+                    borderColor: "#5aa3e0",
+                    backgroundColor: "rgba(100, 181, 246, 0.08)",
+                  },
+                  "&.Mui-disabled": {
+                    borderColor: "#333",
+                    color: "#555",
+                  },
+                }}
               >
                 Continue with GitHub
               </Button>
             </Stack>
 
-            <Divider>
-              <Typography variant="body2" color="text.secondary">
+            <Divider sx={{ borderColor: "#333" }}>
+              <Typography sx={{ fontSize: "11px", color: "#666", fontWeight: 400 }}>
                 or
               </Typography>
             </Divider>
@@ -163,6 +226,24 @@ export function LoginDialog({ open, onClose, onLoginSuccess }: LoginDialogProps)
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
               required
+              size="small"
+              InputLabelProps={{ sx: {
+                color: "#888",
+                fontSize: "13px",
+              }}}
+              InputProps={{
+                sx: {
+                  fontSize: "13px",
+                  color: "#e0e0e0",
+                  backgroundColor: "#1a1a1a",
+                  "& fieldset": { borderColor: "#2a2a2a" },
+                  "&:hover fieldset": { borderColor: "#444" },
+                  "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
+                }
+              }}
+              slotProps={{
+                inputLabel: { shrink: true }
+              }}
             />
 
             <TextField
@@ -173,29 +254,79 @@ export function LoginDialog({ open, onClose, onLoginSuccess }: LoginDialogProps)
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               required
+              size="small"
+              InputLabelProps={{ sx: {
+                color: "#888",
+                fontSize: "13px",
+              }}}
+              InputProps={{
+                sx: {
+                  fontSize: "13px",
+                  color: "#e0e0e0",
+                  backgroundColor: "#1a1a1a",
+                  "& fieldset": { borderColor: "#2a2a2a" },
+                  "&:hover fieldset": { borderColor: "#444" },
+                  "&.Mui-focused fieldset": { borderColor: "#64b5f6", borderWidth: "1px" },
+                }
+              }}
+              slotProps={{
+                inputLabel: { shrink: true }
+              }}
             />
 
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button onClick={onClose} disabled={loading} sx={{ textTransform: "none" }}>
+            <Stack direction="row" spacing="12px" justifyContent="flex-end">
+              <Button
+                onClick={onClose}
+                disabled={loading}
+                sx={{
+                  textTransform: "none",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  height: "28px",
+                  padding: "4px 12px",
+                  color: "#888",
+                  "&:hover": {
+                    backgroundColor: "#2a2a2a",
+                  },
+                }}
+              >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="contained"
                 disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : null}
-                sx={{ textTransform: "none" }}
+                disableElevation
+                startIcon={loading ? <CircularProgress size={14} sx={{ color: "#000" }} /> : null}
+                sx={{
+                  textTransform: "none",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  height: "28px",
+                  padding: "4px 12px",
+                  minWidth: "100px",
+                  backgroundColor: "#64b5f6",
+                  color: "#000",
+                  "&:hover": {
+                    backgroundColor: "#5aa3e0",
+                  },
+                  "&.Mui-disabled": {
+                    backgroundColor: "#222",
+                    color: "#555",
+                  },
+                }}
               >
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </Stack>
 
             <Typography
-              variant="caption"
-              color="text.secondary"
               sx={{
                 textAlign: "center",
                 cursor: "pointer",
+                fontSize: "11px",
+                color: "#666",
+                fontWeight: 400,
                 "&:hover": { textDecoration: "underline" }
               }}
               onClick={handleSignupClick}
