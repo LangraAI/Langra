@@ -90,8 +90,10 @@ jobs:
           tagName: ${{ startsWith(github.ref, 'refs/tags/') && 'v__VERSION__' || '' }}
           releaseName: ${{ startsWith(github.ref, 'refs/tags/') && 'Langra v__VERSION__' || '' }}
           releaseBody: ${{ startsWith(github.ref, 'refs/tags/') && 'See the assets to download and install this version.' || '' }}
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
+          updaterJsonPath: ${{ startsWith(github.ref, 'refs/tags/') && 'latest.json' || '' }}
+          updaterJsonKeepUniversal: true
 
   build-portable:
     name: Build Portable (Windows)

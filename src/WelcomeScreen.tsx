@@ -32,7 +32,7 @@ export function WelcomeScreen({ onLoginSuccess }: WelcomeScreenProps) {
       <Box
         sx={{
           textAlign: "center",
-          maxWidth: 440,
+          maxWidth: 360,
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -45,40 +45,41 @@ export function WelcomeScreen({ onLoginSuccess }: WelcomeScreenProps) {
           src="/logo.png"
           alt="Langra Logo"
           sx={{
-            width: 120,
-            height: 120,
-            mb: 3,
+            width: 80,
+            height: 80,
+            mb: 2.5,
             display: "block",
           }}
         />
 
         <Typography
-          variant="h4"
           sx={{
             color: "#e0e0e0",
             fontWeight: 500,
-            mb: 1.5,
+            mb: 1,
+            fontSize: "20px",
+            letterSpacing: "-0.2px",
           }}
         >
           Welcome to Langra
         </Typography>
 
         <Typography
-          variant="body1"
           sx={{
-            color: "#b3b3b3",
-            mb: 4,
-            lineHeight: 1.6,
+            color: "#888",
+            mb: 3,
+            lineHeight: 1.5,
+            fontSize: "13px",
           }}
         >
           Sign in to get started with instant translations
         </Typography>
 
-        <Stack spacing={2} sx={{ pointerEvents: "auto", width: "100%" }}>
+        <Stack spacing="12px" sx={{ pointerEvents: "auto", width: "100%" }}>
           <Button
             variant="contained"
             fullWidth
-            startIcon={<LoginIcon />}
+            startIcon={<LoginIcon sx={{ fontSize: 16 }} />}
             onClick={handleLoginClick}
             disableElevation
             sx={{
@@ -86,11 +87,12 @@ export function WelcomeScreen({ onLoginSuccess }: WelcomeScreenProps) {
               color: "#000",
               textTransform: "none",
               fontWeight: 500,
-              py: 1.5,
-              fontSize: "0.95rem",
+              height: "36px",
+              fontSize: "13px",
               cursor: "pointer",
+              borderRadius: "4px",
               "&:hover": {
-                backgroundColor: "#42a5f5",
+                backgroundColor: "#5aa3e0",
               },
             }}
           >
@@ -99,12 +101,11 @@ export function WelcomeScreen({ onLoginSuccess }: WelcomeScreenProps) {
         </Stack>
 
         <Typography
-          variant="caption"
           sx={{
-            color: "#808080",
+            color: "#666",
             display: "block",
-            mt: 4,
-            fontSize: "0.8rem",
+            mt: 3,
+            fontSize: "11px",
             lineHeight: 1.5,
           }}
         >

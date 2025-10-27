@@ -5,9 +5,11 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import KeyIcon from "@mui/icons-material/Key";
+import TuneIcon from "@mui/icons-material/Tune";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { SettingsDialog } from "./SettingsDialog";
+import { PreferencesDialog } from "./PreferencesDialog";
 import { invoke } from "@tauri-apps/api/core";
 import { StreamingText } from "./StreamingText";
 
@@ -44,6 +46,7 @@ export function TranslationPopup({
 }: PopupProps) {
   const enhanceInputRef = useRef<HTMLInputElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customInstruction, setCustomInstruction] = useState("");
@@ -296,12 +299,67 @@ export function TranslationPopup({
                 onClose={() => setMenuAnchorEl(null)}
                 PaperProps={{
                   sx: {
-                    background: "#2a2a2a",
+                    background: "#242424",
                     color: "#e0e0e0",
-                    mt: 1,
+                    mt: "6px",
+                    border: "1px solid #333",
+                    borderRadius: "4px",
+                    minWidth: "180px",
                   }
                 }}
               >
+                <MenuItem
+                  onClick={() => {
+                    setMenuAnchorEl(null);
+                    setPreferencesOpen(true);
+                  }}
+                  sx={{
+                    padding: "8px 12px",
+                    minHeight: "36px",
+                    "&:hover": { backgroundColor: "#2a2a2a" },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "#64b5f6", minWidth: "32px" }}>
+                    <TuneIcon sx={{ fontSize: 16 }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Preferences"
+                    primaryTypographyProps={{
+                      sx: {
+                        fontSize: "13px",
+                        fontWeight: 400,
+                        color: "#e0e0e0",
+                      }
+                    }}
+                  />
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {
+                    setMenuAnchorEl(null);
+                    setSettingsOpen(true);
+                  }}
+                  sx={{
+                    padding: "8px 12px",
+                    minHeight: "36px",
+                    "&:hover": { backgroundColor: "#2a2a2a" },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "#64b5f6", minWidth: "32px" }}>
+                    <KeyIcon sx={{ fontSize: 16 }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="API Keys"
+                    primaryTypographyProps={{
+                      sx: {
+                        fontSize: "13px",
+                        fontWeight: 400,
+                        color: "#e0e0e0",
+                      }
+                    }}
+                  />
+                </MenuItem>
+
                 <MenuItem
                   onClick={async () => {
                     setMenuAnchorEl(null);
@@ -319,28 +377,24 @@ export function TranslationPopup({
                     }
                   }}
                   sx={{
-                    "&:hover": { backgroundColor: "#333333" },
+                    padding: "8px 12px",
+                    minHeight: "36px",
+                    "&:hover": { backgroundColor: "#2a2a2a" },
                   }}
                 >
-                  <ListItemIcon sx={{ color: "#64b5f6" }}>
-                    {isLoggedIn ? <LogoutIcon fontSize="small" /> : <LoginIcon fontSize="small" />}
+                  <ListItemIcon sx={{ color: isLoggedIn ? "#f44336" : "#64b5f6", minWidth: "32px" }}>
+                    {isLoggedIn ? <LogoutIcon sx={{ fontSize: 16 }} /> : <LoginIcon sx={{ fontSize: 16 }} />}
                   </ListItemIcon>
-                  <ListItemText>{isLoggedIn ? "Logout" : "Login"}</ListItemText>
-                </MenuItem>
-
-                <MenuItem
-                  onClick={() => {
-                    setMenuAnchorEl(null);
-                    setSettingsOpen(true);
-                  }}
-                  sx={{
-                    "&:hover": { backgroundColor: "#333333" },
-                  }}
-                >
-                  <ListItemIcon sx={{ color: "#64b5f6" }}>
-                    <KeyIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>API Key Settings</ListItemText>
+                  <ListItemText
+                    primary={isLoggedIn ? "Logout" : "Login"}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontSize: "13px",
+                        fontWeight: 400,
+                        color: isLoggedIn ? "#f44336" : "#e0e0e0",
+                      }
+                    }}
+                  />
                 </MenuItem>
               </Menu>
             </Box>
@@ -665,6 +719,7 @@ export function TranslationPopup({
         </Paper>
       </Fade>
 
+      <PreferencesDialog open={preferencesOpen} onClose={() => setPreferencesOpen(false)} />
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Box>
   );

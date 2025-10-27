@@ -10,8 +10,7 @@ Welcome to the Langra documentation! This folder contains comprehensive guides f
 - [Contributing Guide](../CONTRIBUTING.md) - How to contribute
 
 ### Development
-- [Code Style Guide](../CODE_STYLE.md) - Coding standards and rules
-- [Branch Protection](./BRANCH_PROTECTION.md) - Git workflow and branch rules
+- [Code Style Guide](./CODE_STYLE.md) - Coding standards and rules
 - [Building Guide](./BUILDING.md#local-development-build) - Development environment setup
 - [CI/CD Guide](./CICD.md) - Automated builds and releases
 
@@ -99,12 +98,12 @@ See [CI/CD Guide](./CICD.md) for details.
 docs/
 ├── README.md              # This file - documentation index
 ├── BUILDING.md            # How to build on all platforms
-├── TROUBLESHOOTING.md     # Common issues and solutions
+├── CODE_STYLE.md          # Coding standards and rules
+├── RELEASE.md             # Release guide
 ├── CICD.md                # CI/CD workflow documentation
-└── BRANCH_PROTECTION.md   # Git workflow and branch rules
+└── TROUBLESHOOTING.md     # Common issues and solutions
 
 Root level:
-├── CODE_STYLE.md          # Coding standards and rules
 ├── CONTRIBUTING.md        # Contribution guidelines
 ├── CHANGELOG.md           # Version history
 └── README.md              # Project overview

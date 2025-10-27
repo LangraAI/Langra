@@ -431,6 +431,9 @@ pub async fn trigger_translation(app: &AppHandle) {
 
     println!("[TRIGGER] Translation triggered");
 
+    println!("[TRIGGER] Resizing to popup mode before showing...");
+    crate::resize::resize_window_to_popup();
+
     println!("[TRIGGER] Opening window immediately...");
     windows::show_translator_window(true);
 
@@ -609,11 +612,10 @@ async fn detect_language(text: String) -> Result<String, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    dotenvy::dotenv().ok();
-
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let handle = app.handle().clone();
             APP_HANDLE.get_or_init(|| handle.clone());

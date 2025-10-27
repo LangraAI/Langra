@@ -1,0 +1,65 @@
+name: Auto Release on Version Change
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'src-tauri/Cargo.toml'
+      - 'src-tauri/tauri.conf.json'
+
+jobs:
+  check-version:
+    name: Check Version and Create Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.check.outputs.changed }}
+      new_version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version changed
+        id: check
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(grep '"version"' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+          echo "Current version: $CURRENT_VERSION"
+
+          # Check if tag already exists
+          if git rev-parse "v$CURRENT_VERSION" >/dev/null 2>&1; then
+            echo "Tag v$CURRENT_VERSION already exists, skipping release"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version detected: $CURRENT_VERSION"
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          VERSION="${{ steps.check.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  trigger-build:
+    name: Trigger Build Workflow
+    needs: check-version
+    if: needs.check-version.outputs.version_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for tag to be available
+        run: sleep 5
+
+      - name: Trigger build workflow
+        run: |
+          echo "Tag v${{ needs.check-version.outputs.new_version }} pushed"
+          echo "Build workflow will be triggered automatically by the tag"

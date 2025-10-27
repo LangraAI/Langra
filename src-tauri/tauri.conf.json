@@ -34,6 +34,14 @@
   "plugins": {
     "deepLink": {
       "schemes": ["langra"]
+    },
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/ghaithalmasri/langra/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRGMTU1NjI3NDE2RTBBQUEKN0IzNEI3REMyMjgzRjU3MjIxMzZEMDUyQzM5QTlGQzE4RjI1QTkxQTUyMEIyM0E0NDRCMDA4MkZF"
     }
   }
 }

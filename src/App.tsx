@@ -9,7 +9,7 @@ import { SettingsDialog } from "./SettingsDialog";
 import { PermissionModal } from "./PermissionModal";
 
 function App() {
-  const [viewMode, setViewMode] = useState<"popup" | "normal">("normal");
+  const [viewMode, setViewMode] = useState<"popup" | "normal">("popup");
   const [popup, setPopup] = useState({
     isOpen: false,
     text: "",
@@ -323,7 +323,7 @@ function App() {
   }, []);
 
   return (
-    <div className="w-full h-screen" style={{ background: "#1a1a1a" }}>
+    <div style={{ width: "100%", height: "100vh", background: "#1a1a1a" }}>
       {showPermissionModal ? (
         <PermissionModal />
       ) : showSuccess ? (
@@ -332,7 +332,7 @@ function App() {
         <WelcomeScreen
           onLoginSuccess={handleLoginSuccess}
         />
-      ) : viewMode === "popup" && popup.isOpen ? (
+      ) : viewMode === "popup" ? (
         <TranslationPopup
           translation={popup.text}
           isOpen={popup.isOpen}

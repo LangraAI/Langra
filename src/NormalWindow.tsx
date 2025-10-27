@@ -1,11 +1,16 @@
-import { Box, Typography, TextField, Button, ToggleButtonGroup, ToggleButton, Stack, CircularProgress, IconButton, Chip } from "@mui/material";
+import { Box, Typography, TextField, Button, ToggleButtonGroup, ToggleButton, Stack, CircularProgress, IconButton, Chip, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
 import { useState, useEffect, useCallback } from "react";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SettingsIcon from "@mui/icons-material/Settings";
+import TuneIcon from "@mui/icons-material/Tune";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import LoginIcon from "@mui/icons-material/Login";
+import LogoutIcon from "@mui/icons-material/Logout";
+import KeyIcon from "@mui/icons-material/Key";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { SettingsDialog } from "./SettingsDialog";
+import { PreferencesDialog } from "./PreferencesDialog";
 
 export function NormalWindow() {
   const [mode, setMode] = useState<"translate" | "enhance">("translate");
@@ -15,6 +20,9 @@ export function NormalWindow() {
   const [isManualLangSelection, setIsManualLangSelection] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleProcess = useCallback(async () => {
     if (!sourceText.trim()) return;
@@ -71,6 +79,20 @@ export function NormalWindow() {
 
     return () => clearTimeout(timeoutId);
   }, [sourceText, mode, handleProcess]);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const token = await invoke<string>("get_access_token");
+        setIsLoggedIn(!!token);
+        console.log("[NORMAL_WINDOW] User is logged in:", !!token);
+      } catch (err) {
+        setIsLoggedIn(false);
+        console.log("[NORMAL_WINDOW] User is not logged in");
+      }
+    };
+    checkLoginStatus();
+  }, []);
 
   useEffect(() => {
     const currentWindow = getCurrentWebviewWindow();
@@ -156,7 +178,7 @@ export function NormalWindow() {
       >
         <IconButton
           size="small"
-          onClick={() => setSettingsOpen(true)}
+          onClick={(e) => setMenuAnchorEl(e.currentTarget)}
           sx={{
             color: "#999999",
             "&:hover": { backgroundColor: "#333333" },
@@ -164,6 +186,111 @@ export function NormalWindow() {
         >
           <SettingsIcon sx={{ fontSize: 20 }} />
         </IconButton>
+
+        <Menu
+          anchorEl={menuAnchorEl}
+          open={Boolean(menuAnchorEl)}
+          onClose={() => setMenuAnchorEl(null)}
+          PaperProps={{
+            sx: {
+              background: "#242424",
+              color: "#e0e0e0",
+              mt: "6px",
+              border: "1px solid #333",
+              borderRadius: "4px",
+              minWidth: "180px",
+            }
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              setPreferencesOpen(true);
+            }}
+            sx={{
+              padding: "8px 12px",
+              minHeight: "36px",
+              "&:hover": { backgroundColor: "#2a2a2a" },
+            }}
+          >
+            <ListItemIcon sx={{ color: "#64b5f6", minWidth: "32px" }}>
+              <TuneIcon sx={{ fontSize: 16 }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="Preferences"
+              primaryTypographyProps={{
+                sx: {
+                  fontSize: "13px",
+                  fontWeight: 400,
+                  color: "#e0e0e0",
+                }
+              }}
+            />
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              setSettingsOpen(true);
+            }}
+            sx={{
+              padding: "8px 12px",
+              minHeight: "36px",
+              "&:hover": { backgroundColor: "#2a2a2a" },
+            }}
+          >
+            <ListItemIcon sx={{ color: "#64b5f6", minWidth: "32px" }}>
+              <KeyIcon sx={{ fontSize: 16 }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="API Keys"
+              primaryTypographyProps={{
+                sx: {
+                  fontSize: "13px",
+                  fontWeight: 400,
+                  color: "#e0e0e0",
+                }
+              }}
+            />
+          </MenuItem>
+
+          <MenuItem
+            onClick={async () => {
+              setMenuAnchorEl(null);
+              if (isLoggedIn) {
+                try {
+                  await invoke("logout");
+                  setIsLoggedIn(false);
+                  console.log("[NORMAL_WINDOW] Logged out successfully");
+                  window.location.reload();
+                } catch (error) {
+                  console.error("[NORMAL_WINDOW] Logout failed:", error);
+                }
+              } else {
+                window.open("https://white-bush-0ea25dc03.3.azurestaticapps.net/auth", "_blank");
+              }
+            }}
+            sx={{
+              padding: "8px 12px",
+              minHeight: "36px",
+              "&:hover": { backgroundColor: "#2a2a2a" },
+            }}
+          >
+            <ListItemIcon sx={{ color: isLoggedIn ? "#f44336" : "#64b5f6", minWidth: "32px" }}>
+              {isLoggedIn ? <LogoutIcon sx={{ fontSize: 16 }} /> : <LoginIcon sx={{ fontSize: 16 }} />}
+            </ListItemIcon>
+            <ListItemText
+              primary={isLoggedIn ? "Logout" : "Login"}
+              primaryTypographyProps={{
+                sx: {
+                  fontSize: "13px",
+                  fontWeight: 400,
+                  color: isLoggedIn ? "#f44336" : "#e0e0e0",
+                }
+              }}
+            />
+          </MenuItem>
+        </Menu>
       </Box>
 
       <Box
@@ -417,6 +544,7 @@ export function NormalWindow() {
         </Stack>
       </Box>
 
+      <PreferencesDialog open={preferencesOpen} onClose={() => setPreferencesOpen(false)} />
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Box>
   );
