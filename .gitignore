@@ -37,3 +37,9 @@ src-tauri/Cargo.lock
 
 # Claude
 .Claude
+
+# Apple API Keys (keep private!)
+*.p8
+*.p12
+*.cer
+*.certSigningRequest

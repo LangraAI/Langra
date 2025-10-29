@@ -28,7 +28,8 @@
     ],
     "macOS": {
       "minimumSystemVersion": "10.15",
-      "entitlements": "Info.plist"
+      "entitlements": "Info.plist",
+      "signingIdentity": "Developer ID Application: Ghaith Almasri (T2UCP8U2MU)"
     }
   },
   "plugins": {
