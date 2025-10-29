@@ -580,7 +580,8 @@ async fn enhance_text(text: String, language: String) {
     use tauri::Emitter;
     let app = APP_HANDLE.get().unwrap();
 
-    println!("[FIX] Fixing {} text: '{}'", language, &text[..text.len().min(100)]);
+    let sample: String = text.chars().take(100).collect();
+    println!("[FIX] Fixing {} text: '{}'", language, sample);
 
     match translator::enhance_stream(&text, &language, app).await {
         Ok(enhanced) => {
@@ -596,7 +597,8 @@ async fn enhance_text(text: String, language: String) {
 
 #[tauri::command]
 async fn detect_language(text: String) -> Result<String, String> {
-    println!("[DETECT_LANG_CMD] Detecting language for text (first 100 chars): '{}'", &text[..text.len().min(100)]);
+    let sample: String = text.chars().take(100).collect();
+    println!("[DETECT_LANG_CMD] Detecting language for text sample: '{}'", sample);
 
     match translator::detect_language(&text).await {
         Ok(lang) => {

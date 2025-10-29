@@ -2,7 +2,8 @@ use anyhow::Result;
 use crate::get_access_token;
 
 pub async fn detect_language(text: &str) -> Result<String> {
-    println!("[DETECT_LANG] Detecting language for text (first 100 chars): '{}'", &text[..text.len().min(100)]);
+    let sample: String = text.chars().take(100).collect();
+    println!("[DETECT_LANG] Detecting language for text sample: '{}'", sample);
 
     let token = get_access_token().map_err(|e| anyhow::anyhow!(e))?;
 

@@ -1,5 +1,4 @@
 use active_win_pos_rs::{get_active_window, ActiveWindow};
-use enigo::{Enigo, Settings};
 use parking_lot::Mutex;
 use std::thread;
 use std::time::Duration;
@@ -194,60 +193,116 @@ fn focus_previous_window() -> Result<(), String> {
     }
 }
 
+/// Instant paste using platform-specific APIs (no delays)
+#[cfg(target_os = "macos")]
+fn instant_paste_command() -> Result<(), String> {
+    use core_graphics::event::{CGEvent, CGEventFlags, CGEventTapLocation};
+    use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
+
+    println!("[INSERTION] Instant paste via CGEvent");
+
+    let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState)
+        .map_err(|_| "Failed to create CGEventSource")?;
+
+    let v_down = CGEvent::new_keyboard_event(source.clone(), 9, true)
+        .map_err(|_| "Failed to create key down event")?;
+    v_down.set_flags(CGEventFlags::CGEventFlagCommand);
+    v_down.post(CGEventTapLocation::HID);
+
+    let v_up = CGEvent::new_keyboard_event(source, 9, false)
+        .map_err(|_| "Failed to create key up event")?;
+    v_up.post(CGEventTapLocation::HID);
+
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn instant_paste_command() -> Result<(), String> {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{
+        SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
+        VK_CONTROL, VK_V,
+    };
+
+    println!("[INSERTION] Instant paste via SendInput");
+
+    let mut inputs: [INPUT; 4] = unsafe { std::mem::zeroed() };
+
+    inputs[0].r#type = INPUT_KEYBOARD;
+    inputs[0].Anonymous.ki = KEYBDINPUT {
+        wVk: VK_CONTROL,
+        wScan: 0,
+        dwFlags: Default::default(),
+        time: 0,
+        dwExtraInfo: 0,
+    };
+
+    inputs[1].r#type = INPUT_KEYBOARD;
+    inputs[1].Anonymous.ki = KEYBDINPUT {
+        wVk: VK_V,
+        wScan: 0,
+        dwFlags: Default::default(),
+        time: 0,
+        dwExtraInfo: 0,
+    };
+
+    inputs[2].r#type = INPUT_KEYBOARD;
+    inputs[2].Anonymous.ki = KEYBDINPUT {
+        wVk: VK_V,
+        wScan: 0,
+        dwFlags: KEYEVENTF_KEYUP,
+        time: 0,
+        dwExtraInfo: 0,
+    };
+
+    inputs[3].r#type = INPUT_KEYBOARD;
+    inputs[3].Anonymous.ki = KEYBDINPUT {
+        wVk: VK_CONTROL,
+        wScan: 0,
+        dwFlags: KEYEVENTF_KEYUP,
+        time: 0,
+        dwExtraInfo: 0,
+    };
+
+    unsafe {
+        let result = SendInput(&inputs, std::mem::size_of::<INPUT>() as i32);
+        if result != 4 {
+            return Err(format!("SendInput sent only {} of 4 events", result));
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn instant_paste_command() -> Result<(), String> {
+    use enigo::{Enigo, Key, Direction, Keyboard, Settings};
+
+    println!("[INSERTION] Instant paste via enigo");
+
+    let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
+    enigo.key(Key::Control, Direction::Press).map_err(|e| e.to_string())?;
+    enigo.key(Key::Unicode('v'), Direction::Click).map_err(|e| e.to_string())?;
+    enigo.key(Key::Control, Direction::Release).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 fn replace_input_with_text(text: &str) -> Result<(), String> {
     if text.is_empty() {
         return Ok(());
     }
 
     use arboard::Clipboard;
-    use std::path::PathBuf;
 
     let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
     clipboard.set_text(text).map_err(|e| e.to_string())?;
 
+    println!("[INSERTION] Text in clipboard, ready to paste");
+
     thread::sleep(Duration::from_millis(50));
 
-    #[cfg(target_os = "macos")]
-    {
-        println!("[INSERTION] Running replace AppleScript...");
-
-        let script_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("resources")
-            .join("replace.applescript");
-
-        if !script_path.exists() {
-            return Err(format!("replace.applescript not found at {:?}", script_path));
-        }
-
-        let output = std::process::Command::new("osascript")
-            .arg(&script_path)
-            .output()
-            .map_err(|e| format!("Failed to run applescript: {}", e))?;
-
-        if !output.status.success() {
-            let error = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("AppleScript failed: {}", error));
-        }
-
-        thread::sleep(Duration::from_millis(50));
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        use enigo::{Key, Direction, Keyboard};
-        let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
-
-        println!("[INSERTION] Pressing backspace to delete selected text...");
-        enigo.key(Key::Backspace, Direction::Click).map_err(|e| e.to_string())?;
-        thread::sleep(Duration::from_millis(50));
-
-        println!("[INSERTION] Pasting translation...");
-        enigo.key(Key::Control, Direction::Press).map_err(|e| e.to_string())?;
-        enigo.key(Key::Unicode('v'), Direction::Click).map_err(|e| e.to_string())?;
-        enigo.key(Key::Control, Direction::Release).map_err(|e| e.to_string())?;
-
-        thread::sleep(Duration::from_millis(100));
-    }
+    instant_paste_command()?;
+    println!("[INSERTION] ✅ Paste complete");
 
     Ok(())
 }
@@ -265,8 +320,8 @@ pub async fn insert_translation_into_previous_input(text: String) -> Result<(), 
         }
     }
 
-    println!("[INSERTION] Waiting 150ms...");
-    thread::sleep(Duration::from_millis(150));
+    println!("[INSERTION] Waiting 100ms for window focus...");
+    thread::sleep(Duration::from_millis(100));
 
     println!("[INSERTION] Replacing input with text...");
     match replace_input_with_text(&text) {
