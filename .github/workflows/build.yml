@@ -87,9 +87,8 @@ jobs:
       - name: Import Code Signing Certificate
         if: matrix.platform == 'macos-latest'
         run: |
-          # Decode certificate - write to file first to avoid pipe issues
-          echo "${{ secrets.APPLE_CERTIFICATE }}" > certificate.b64
-          base64 -D -i certificate.b64 -o certificate.p12
+          # Decode certificate - use printf to avoid newline issues
+          printf '%s' "${{ secrets.APPLE_CERTIFICATE }}" | base64 -D > certificate.p12
 
           # Create keychain
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
