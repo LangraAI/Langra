@@ -353,6 +353,7 @@ function App() {
           detectedLanguage={popup.detectedLanguage}
           mode={mode}
           progress={popup.progress}
+          originalText={popup.originalText}
           onCopy={handleCopy}
           onReplace={handleReplace}
           onClose={handleClose}
