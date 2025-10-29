@@ -92,7 +92,7 @@ jobs:
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
           # Import certificate from secrets (decode to file)
-          echo "${{ secrets.APPLE_CERTIFICATE }}" | base64 --decode > $CERTIFICATE_PATH
+          echo "${{ secrets.APPLE_CERTIFICATE }}" | base64 -D > $CERTIFICATE_PATH
 
           # Create temporary keychain
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $KEYCHAIN_PATH
