@@ -22,7 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # Fetch all history and tags
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if version changed
