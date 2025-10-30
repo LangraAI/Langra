@@ -99,7 +99,11 @@ macOS releases are signed and notarized by Ghaith Almasri using an Apple Develop
 
 This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
 
-Langra operates entirely locally on your device. No user data is collected, stored, or transmitted to external servers operated by the Langra project. Translation services use your configured AI provider (OpenAI, Anthropic, etc.), subject to their respective privacy policies.
+Langra operates entirely locally on your device. No user data is collected, stored, or transmitted to external servers operated by the Langra project.
+
+**AI Provider Options:**
+- **Your own API keys:** Translation services use your configured AI provider (OpenAI, Anthropic, etc.), subject to their respective privacy policies.
+- **Langra-provided models:** For users without API keys, Langra provides access to Azure OpenAI models. In this case, translated text is sent to Azure OpenAI services operated by the Langra project, subject to [Microsoft Azure's privacy policy](https://privacy.microsoft.com/en-us/privacystatement).
 
 ## Contributing
 
