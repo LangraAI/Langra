@@ -17,9 +17,5 @@
     <!-- Allow AppleEvents for automation -->
     <key>com.apple.security.automation.apple-events</key>
     <true/>
-
-    <!-- Usage descriptions -->
-    <key>NSAppleEventsUsageDescription</key>
-    <string>Langra needs to monitor keyboard shortcuts to detect double Cmd+C for translation.</string>
 </dict>
 </plist>
