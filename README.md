@@ -83,6 +83,24 @@ See [docs/BUILDING.md](./docs/BUILDING.md) for detailed instructions.
 - [Release Guide](./docs/RELEASE.md) - Creating releases
 - [CI/CD](./docs/CICD.md) - Automated builds
 
+## Code Signing Policy
+
+Windows releases are code signed with a certificate provided by [SignPath Foundation](https://signpath.org/).
+
+**Certificate:** Free code signing provided by [SignPath.io](https://signpath.io/), certificate by SignPath Foundation
+
+**Team Roles:**
+- **Committers/Reviewers:** [@ghaithalmasri](https://github.com/ghaithalmasri)
+- **Approvers:** [@ghaithalmasri](https://github.com/ghaithalmasri)
+
+macOS releases are signed and notarized by Ghaith Almasri using an Apple Developer ID certificate.
+
+## Privacy Policy
+
+This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
+Langra operates entirely locally on your device. No user data is collected, stored, or transmitted to external servers operated by the Langra project. Translation services use your configured AI provider (OpenAI, Anthropic, etc.), subject to their respective privacy policies.
+
 ## Contributing
 
 Contributions are welcome! Please read the [contributing guide](./CONTRIBUTING.md) before submitting pull requests.
