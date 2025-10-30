@@ -4,6 +4,8 @@
 <dict>
     <key>NSAppleEventsUsageDescription</key>
     <string>Langra needs to monitor keyboard shortcuts to detect double Cmd+C for translation.</string>
+    <key>NSInputMonitoringUsageDescription</key>
+    <string>Langra needs to monitor keyboard shortcuts to detect double Cmd+C for quick translation.</string>
     <key>com.apple.security.app-sandbox</key>
     <false/>
 </dict>
